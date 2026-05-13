@@ -1,0 +1,31 @@
+{% extends 'admin/_layout.html' %}
+{% block admin_content %}
+<h1 style="font-style: italic; margin-bottom: var(--space-6);">Панель администратора</h1>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--space-4);">
+  <div class="tile"><div class="section-eyebrow">Товары</div><div style="font-family: var(--font-display); font-size: var(--text-2xl); color: var(--color-primary); font-weight: 800;">{{ stats.products }}</div></div>
+  <div class="tile"><div class="section-eyebrow">Заказы</div><div style="font-family: var(--font-display); font-size: var(--text-2xl); color: var(--color-primary); font-weight: 800;">{{ stats.orders }}</div></div>
+  <div class="tile"><div class="section-eyebrow">Пользователи</div><div style="font-family: var(--font-display); font-size: var(--text-2xl); color: var(--color-primary); font-weight: 800;">{{ stats.users }}</div></div>
+  <div class="tile"><div class="section-eyebrow">Отзывы на модер.</div><div style="font-family: var(--font-display); font-size: var(--text-2xl); color: var(--color-warning); font-weight: 800;">{{ stats.pending_reviews }}</div></div>
+  <div class="tile"><div class="section-eyebrow">Новости</div><div style="font-family: var(--font-display); font-size: var(--text-2xl); color: var(--color-primary); font-weight: 800;">{{ stats.news }}</div></div>
+  <div class="tile"><div class="section-eyebrow">Акции</div><div style="font-family: var(--font-display); font-size: var(--text-2xl); color: var(--color-primary); font-weight: 800;">{{ stats.promotions }}</div></div>
+</div>
+
+<h2 style="margin-top: var(--space-10);">Последние заказы</h2>
+<div class="table-card" style="margin-top: var(--space-4);">
+  <table class="data">
+    <thead><tr><th>№</th><th>Дата</th><th>Покупатель</th><th>Сумма</th><th>Статус</th></tr></thead>
+    <tbody>
+      {% for o in recent_orders %}
+        <tr>
+          <td><strong>{{ o.id }}</strong></td>
+          <td>{{ o.created_at.strftime('%d.%m %H:%M') }}</td>
+          <td>{{ o.full_name }}</td>
+          <td style="font-family: var(--font-mono); color: var(--color-primary);">{{ "{:,.0f}".format(o.total).replace(',', ' ') }} ₽</td>
+          <td><span class="badge {% if o.status=='done' %}success{% elif o.status=='canceled' %}error{% else %}warn{% endif %}">{{ o.status }}</span></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

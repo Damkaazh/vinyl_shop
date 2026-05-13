@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div style="margin-bottom: var(--space-8);">
+      <div class="section-eyebrow">{{ t.news }}</div>
+      <h1 style="font-style: italic;">{% if lang=='en' %}News from the harbour{% else %}Новости гавани{% endif %}</h1>
+    </div>
+    <div class="news-grid">
+      {% for n in news_items %}
+      <a class="news-card" href="{{ url_for('main.news_detail', news_id=n.id) }}">
+        <div class="card-image"><img src="{{ url_for('static', filename='img/' + n.image) }}" alt=""></div>
+        <div class="card-body">
+          <div class="meta">{{ n.published_at.strftime('%d.%m.%Y') }} · ★ {{ n.avg_rating }}</div>
+          <h3>{{ n.title(lang) }}</h3>
+          <p style="color: var(--color-text-muted); font-size: 0.9rem; margin-top: 0.5rem;">{{ n.body(lang)[:140] }}…</p>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

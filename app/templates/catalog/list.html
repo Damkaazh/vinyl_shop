@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import product_card %}
+{% block title %}{% if category %}{{ category.name(lang) }}{% else %}{{ t.catalog }}{% endif %} — {{ t.site_name }}{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div style="margin-bottom: var(--space-8);">
+      <div class="section-eyebrow">{{ t.catalog }}</div>
+      <h1 style="font-style: italic;">{% if category %}{{ category.name(lang) }}{% else %}{% if lang=='en' %}All products{% else %}Все товары{% endif %}{% endif %}</h1>
+      {% if category %}<p style="color: var(--color-text-muted); margin-top: var(--space-2);">{% if lang=='en' %}{{ category.description_en }}{% else %}{{ category.description_ru }}{% endif %}</p>{% endif %}
+    </div>
+
+    <div class="catalog-layout">
+      <aside class="filters">
+        <h3>{{ t.filters }}</h3>
+        <form method="get">
+          {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+          <div class="filter-group">
+            <label>{{ t.search }}</label>
+            <input type="text" name="q" value="{{ q or '' }}" class="input" placeholder="{{ t.search_placeholder }}">
+          </div>
+          <div class="filter-group">
+            <label>{{ t.price }}, ₽</label>
+            <div class="range-row">
+              <input type="number" name="price_min" value="{{ price_min or '' }}" placeholder="{{ t.from }}" class="input" min="0">
+              <input type="number" name="price_max" value="{{ price_max or '' }}" placeholder="{{ t.to }}" class="input" min="0">
+            </div>
+          </div>
+          <div class="filter-group">
+            <label class="checkbox">
+              <input type="checkbox" name="available" value="1" {% if available %}checked{% endif %}>
+              {{ t.available_only }}
+            </label>
+          </div>
+          <div class="filter-group">
+            <label>{{ t.sort_by }}</label>
+            <select name="sort">
+              <option value="new" {% if sort=='new' %}selected{% endif %}>{{ t.sort_new }}</option>
+              <option value="price_asc" {% if sort=='price_asc' %}selected{% endif %}>{{ t.sort_price_asc }}</option>
+              <option value="price_desc" {% if sort=='price_desc' %}selected{% endif %}>{{ t.sort_price_desc }}</option>
+              <option value="rating" {% if sort=='rating' %}selected{% endif %}>{{ t.sort_rating }}</option>
+            </select>
+          </div>
+          <button class="btn btn-primary btn-block" type="submit">{{ t.apply }}</button>
+          <a href="{{ request.path }}" class="btn btn-ghost btn-block" style="margin-top: 0.5rem;">{{ t.reset }}</a>
+
+          <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-divider);">
+            <h3>{{ t.catalog }}</h3>
+            {% for c in categories %}
+              <a href="{{ url_for('catalog.category', slug=c.slug) }}" style="display:block; padding: 6px 0; color: {% if category and category.id==c.id %}var(--color-primary){% else %}var(--color-text){% endif %}; font-size: 0.9rem;">{{ c.name(lang) }}</a>
+            {% endfor %}
+          </div>
+        </form>
+      </aside>
+
+      <div>
+        <div class="toolbar">
+          <span class="count">{{ products|length }} {% if lang=='en' %}items{% else %}товаров{% endif %}</span>
+        </div>
+        {% if products %}
+          <div class="product-grid">
+            {% for p in products %}{{ product_card(p, lang) }}{% endfor %}
+          </div>
+        {% else %}
+          <div style="padding: var(--space-12); text-align:center; background: var(--color-surface); border: 1px dashed var(--color-divider); border-radius: var(--radius-lg);">
+            <h3 style="color: var(--color-text-muted);">{% if lang=='en' %}Nothing matches your filters{% else %}Ничего не найдено{% endif %}</h3>
+            <a href="{{ request.path }}" class="btn btn-outline" style="margin-top: 1rem;">{{ t.reset }}</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

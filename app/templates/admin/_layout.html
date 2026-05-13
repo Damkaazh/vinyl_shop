@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div style="display: grid; grid-template-columns: 240px 1fr; gap: var(--space-8);">
+      <aside style="background: var(--color-surface); border: 1px solid var(--color-divider); border-radius: var(--radius-lg); padding: var(--space-5); position: sticky; top: 100px; align-self: start;">
+        <div class="section-eyebrow" style="margin-bottom: var(--space-4);">Admin</div>
+        <nav style="display: flex; flex-direction: column; gap: 4px;">
+          <a href="{{ url_for('admin.index') }}" class="btn btn-ghost btn-sm" style="justify-content: flex-start;">📊 Дашборд</a>
+          <a href="{{ url_for('admin.products') }}" class="btn btn-ghost btn-sm" style="justify-content: flex-start;">🛍 Товары</a>
+          <a href="{{ url_for('admin.orders') }}" class="btn btn-ghost btn-sm" style="justify-content: flex-start;">📦 Заказы</a>
+          <a href="{{ url_for('admin.reviews') }}" class="btn btn-ghost btn-sm" style="justify-content: flex-start;">⭐ Отзывы</a>
+          <a href="{{ url_for('admin.news_list') }}" class="btn btn-ghost btn-sm" style="justify-content: flex-start;">📰 Новости</a>
+          <a href="{{ url_for('admin.promotions') }}" class="btn btn-ghost btn-sm" style="justify-content: flex-start;">🏷 Акции</a>
+        </nav>
+      </aside>
+      <div>
+        {% block admin_content %}{% endblock %}
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

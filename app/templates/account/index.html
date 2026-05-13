@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}{{ t.account }} — {{ t.site_name }}{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="account-header">
+      <div class="avatar-big"><img src="{{ url_for('static', filename='img/' + current_user.avatar) }}" alt=""></div>
+      <div>
+        <div class="section-eyebrow">{{ t.account }}</div>
+        <h1>{{ current_user.full_name }}</h1>
+        <div class="meta">@{{ current_user.nickname }} · {{ current_user.email }}</div>
+        <div style="margin-top: var(--space-3); display: flex; gap: var(--space-2); flex-wrap: wrap;">
+          <span class="badge accent">{{ t.login }}: {{ current_user.login }}</span>
+          {% if current_user.is_admin %}<span class="badge warn">ADMIN</span>{% endif %}
+          <span class="badge">{{ current_user.gender|upper }} · {{ current_user.birth_date.strftime('%d.%m.%Y') }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="tile-grid">
+      <div class="tile">
+        <h3>📦 {{ t.current_order }}</h3>
+        {% if current_order %}
+          <p><strong>№ {{ current_order.id }}</strong> · {{ current_order.created_at.strftime('%d.%m.%Y') }}</p>
+          <p style="color: var(--color-text-muted); font-size: 0.9rem;">{{ current_order.items|length }} {% if lang=='en' %}items{% else %}позиций{% endif %} · {{ "{:,.0f}".format(current_order.total).replace(',', ' ') }} ₽</p>
+          <p style="margin-top: 0.5rem;"><span class="badge {% if current_order.status=='shipped' %}success{% elif current_order.status=='paid' %}accent{% else %}warn{% endif %}">{{ current_order.status }}</span></p>
+        {% else %}
+          <p style="color: var(--color-text-muted);">{% if lang=='en' %}No active orders.{% else %}Активных заказов нет.{% endif %}</p>
+        {% endif %}
+      </div>
+
+      <div class="tile">
+        <h3>♥ {{ t.favorites }}</h3>
+        {% if favorites %}
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 6px;">
+            {% for f in favorites[:6] %}
+              <li>
+                {% if f.product %}
+                  <a href="{{ url_for('catalog.detail', product_id=f.product.id) }}">{{ f.product.name(lang) }}</a>
+                {% elif f.news %}
+                  <a href="{{ url_for('main.news_detail', news_id=f.news.id) }}">{{ f.news.title(lang) }}</a>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p style="color: var(--color-text-muted);">{{ t.no_favorites }}</p>
+        {% endif %}
+      </div>
+
+      <div class="tile">
+        <h3>⌚ {{ t.recent_views }}</h3>
+        {% if recent %}
+          <ul style="list-style: none; display: flex; flex-direction: column; gap: 6px;">
+            {% for r in recent %}<li><a href="{{ url_for('catalog.detail', product_id=r.product.id) }}">{{ r.product.name(lang) }}</a></li>{% endfor %}
+          </ul>
+        {% else %}
+          <p style="color: var(--color-text-muted);">{{ t.no_recent }}</p>
+        {% endif %}
+      </div>
+
+      <div class="tile">
+        <h3>🔐 {{ t.sessions }}</h3>
+        <ul style="list-style: none; display: flex; flex-direction: column; gap: 6px; font-family: var(--font-mono); font-size: 0.85rem;">
+          {% for s in sessions %}
+            <li>{{ s.logged_at.strftime('%d.%m.%Y %H:%M') }} · {{ s.ip_address or '-' }}</li>
+          {% else %}
+            <li style="color: var(--color-text-muted);">—</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <h2 style="font-style: italic; margin-top: var(--space-12);">{{ t.previous_orders }}</h2>
+    <div class="table-card" style="margin-top: var(--space-4);">
+      {% if orders %}
+      <table class="data">
+        <thead><tr><th>№</th><th>{% if lang=='en' %}Date{% else %}Дата{% endif %}</th><th>{% if lang=='en' %}Items{% else %}Позиций{% endif %}</th><th>{{ t.total }}</th><th>{% if lang=='en' %}Status{% else %}Статус{% endif %}</th></tr></thead>
+        <tbody>
+          {% for o in orders %}
+          <tr>
+            <td><strong>{{ o.id }}</strong></td>
+            <td>{{ o.created_at.strftime('%d.%m.%Y %H:%M') }}</td>
+            <td>{{ o.items|length }}</td>
+            <td style="font-family: var(--font-mono); color: var(--color-primary);">{{ "{:,.0f}".format(o.total).replace(',', ' ') }} ₽</td>
+            <td><span class="badge {% if o.status=='done' %}success{% elif o.status=='canceled' %}error{% else %}warn{% endif %}">{{ o.status }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding: var(--space-8); text-align: center; color: var(--color-text-muted);">{{ t.no_orders }}</div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'admin/_layout.html' %}
+{% block admin_content %}
+<h1 style="font-style: italic; margin-bottom: var(--space-6);">Модерация отзывов</h1>
+
+<h2>На модерации <span style="color: var(--color-warning); font-family: var(--font-mono); font-size: 0.6em;">{{ pending|length }}</span></h2>
+{% if pending %}
+<div class="cart-list" style="margin-top: var(--space-4);">
+  {% for r in pending %}
+  <div class="cart-item" style="grid-template-columns: 1fr;">
+    <div>
+      <div style="display: flex; gap: var(--space-3); align-items: center;">
+        <strong>{{ r.user.nickname }}</strong>
+        <span class="rating">{% for i in range(5) %}{% if i < r.rating %}★{% else %}<span class="star-empty">★</span>{% endif %}{% endfor %}</span>
+        <span style="color: var(--color-text-muted); font-family: var(--font-mono); font-size: 13px; margin-left: auto;">→ {{ r.product.name_ru }}</span>
+      </div>
+      <p style="margin-top: var(--space-2);">{{ r.text }}</p>
+      <div style="margin-top: var(--space-3); display: flex; gap: var(--space-2);">
+        <form method="post" action="{{ url_for('admin.review_approve', review_id=r.id) }}" style="display: inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+          <button class="btn btn-primary btn-sm" type="submit">Опубликовать</button>
+        </form>
+        <form method="post" action="{{ url_for('admin.review_delete', review_id=r.id) }}" style="display: inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+          <button class="btn btn-danger btn-sm" type="submit">Удалить</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<p style="color: var(--color-text-muted); padding: var(--space-6);">Нет новых отзывов на модерации.</p>
+{% endif %}
+
+<h2 style="margin-top: var(--space-10);">Опубликованные</h2>
+<div class="table-card" style="margin-top: var(--space-4);">
+  <table class="data">
+    <thead><tr><th>Автор</th><th>Товар</th><th>Оценка</th><th>Дата</th><th></th></tr></thead>
+    <tbody>
+      {% for r in approved %}
+      <tr>
+        <td><strong>{{ r.user.nickname }}</strong></td>
+        <td>{{ r.product.name_ru }}</td>
+        <td>{{ '★' * r.rating }}</td>
+        <td>{{ r.created_at.strftime('%d.%m.%Y') }}</td>
+        <td>
+          <form method="post" action="{{ url_for('admin.review_delete', review_id=r.id) }}" onsubmit="return confirm('Удалить?');" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+            <button class="btn btn-danger btn-sm" type="submit">Удалить</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

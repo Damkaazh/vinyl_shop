@@ -1,0 +1,41 @@
+{% extends 'admin/_layout.html' %}
+{% from '_macros.html' import field %}
+{% block admin_content %}
+<h1 style="font-style: italic; margin-bottom: var(--space-6);">{% if item %}Редактирование товара{% else %}Новый товар{% endif %}</h1>
+
+<form method="post" enctype="multipart/form-data" class="form-card">
+  {{ form.hidden_tag() }}
+
+  <div class="form-grid-2">
+    <div class="form-row">
+      {{ form.category_id.label }}
+      {{ form.category_id(class_='input') }}
+    </div>
+    <div class="form-row">
+      <label class="checkbox" style="margin-top: 28px;">{{ form.is_featured() }} Показывать на главной</label>
+    </div>
+  </div>
+
+  <div class="form-grid-2">{{ field(form.name_ru) }}{{ field(form.name_en) }}</div>
+  <div class="form-grid-2">{{ field(form.short_ru) }}{{ field(form.short_en) }}</div>
+  <div class="form-grid-2">{{ field(form.description_ru, type='textarea') }}{{ field(form.description_en, type='textarea') }}</div>
+  <div class="form-grid-2">{{ field(form.specs_ru, type='textarea') }}{{ field(form.specs_en, type='textarea') }}</div>
+
+  <div class="form-grid-3">
+    {{ field(form.price) }}
+    {{ field(form.old_price) }}
+    {{ field(form.stock) }}
+  </div>
+
+  <div class="form-row">
+    {{ form.image.label }}
+    {% if item and item.image %}<div style="margin-bottom: 8px;"><img src="{{ url_for('static', filename='img/' + item.image) }}" style="height: 80px; border-radius: 4px;"></div>{% endif %}
+    {{ form.image(class_='input') }}
+  </div>
+
+  <div class="form-actions">
+    {{ form.submit(class_='btn btn-primary') }}
+    <a href="{{ url_for('admin.products') }}" class="btn btn-ghost">Отмена</a>
+  </div>
+</form>
+{% endblock %}

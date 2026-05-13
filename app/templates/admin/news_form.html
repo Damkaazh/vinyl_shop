@@ -1,0 +1,13 @@
+{% extends 'admin/_layout.html' %}
+{% from '_macros.html' import field %}
+{% block admin_content %}
+<h1 style="font-style: italic; margin-bottom: var(--space-6);">{% if item %}Редактирование новости{% else %}Новая новость{% endif %}</h1>
+<form method="post" enctype="multipart/form-data" class="form-card">
+  {{ form.hidden_tag() }}
+  <div class="form-grid-2">{{ field(form.title_ru) }}{{ field(form.title_en) }}</div>
+  <div class="form-grid-2">{{ field(form.body_ru, type='textarea') }}{{ field(form.body_en, type='textarea') }}</div>
+  <div class="form-row">{{ form.image.label }}{{ form.image(class_='input') }}</div>
+  <div class="form-row"><label class="checkbox">{{ form.is_featured() }} Показывать на главной</label></div>
+  <div class="form-actions">{{ form.submit(class_='btn btn-primary') }}<a href="{{ url_for('admin.news_list') }}" class="btn btn-ghost">Отмена</a></div>
+</form>
+{% endblock %}

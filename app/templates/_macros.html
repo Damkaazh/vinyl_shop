@@ -1,0 +1,55 @@
+{# === Макрос карточки товара === #}
+{% macro product_card(p, lang='ru') %}
+  <article class="product-card">
+    <a href="{{ url_for('catalog.detail', product_id=p.id) }}" class="card-image" style="display:block;">
+      <img src="{{ url_for('static', filename='img/' + p.image) }}" alt="{{ p.name(lang) }}" loading="lazy">
+    </a>
+    <div class="card-body">
+      <span class="card-cat">{{ p.category.name(lang) }}</span>
+      <h3><a href="{{ url_for('catalog.detail', product_id=p.id) }}">{{ p.name(lang) }}</a></h3>
+      <div class="rating" aria-label="Рейтинг {{ p.avg_rating }}">
+        {% set rating = p.avg_rating|round|int %}
+        {% for i in range(5) %}
+          {% if i < rating %}★{% else %}<span class="star-empty">★</span>{% endif %}
+        {% endfor %}
+        <span class="reviews-count">({{ p.reviews_count }})</span>
+      </div>
+      <div class="card-meta">
+        <div>
+          {% if p.old_price %}<span class="old-price">{{ "{:,.0f}".format(p.old_price).replace(',', ' ') }} ₽</span>{% endif %}
+          <span class="price">{{ "{:,.0f}".format(p.price).replace(',', ' ') }} ₽</span>
+        </div>
+        <span class="stock-badge {% if not p.in_stock %}out{% endif %}">
+          {% if p.in_stock %}{{ '★' if lang=='en' else '' }} {{ ('In stock' if lang=='en' else 'В наличии') }}{% else %}{{ ('Out' if lang=='en' else 'Нет') }}{% endif %}
+        </span>
+      </div>
+    </div>
+  </article>
+{% endmacro %}
+
+{# === Иконки звёзд для рейтинга === #}
+{% macro stars(value, max=5) %}
+  <span class="rating">
+    {% set v = (value or 0)|round|int %}
+    {% for i in range(max) %}
+      {% if i < v %}★{% else %}<span class="star-empty">★</span>{% endif %}
+    {% endfor %}
+  </span>
+{% endmacro %}
+
+{# === Поле формы === #}
+{% macro field(field, type='text', placeholder='') %}
+  <div class="form-row">
+    {{ field.label }}
+    {% if type == 'textarea' %}
+      {{ field(class_='input', placeholder=placeholder, rows=4) }}
+    {% else %}
+      {{ field(class_='input', placeholder=placeholder, type=type) }}
+    {% endif %}
+    {% if field.errors %}
+      <div class="errors">
+        {% for err in field.errors %}<div>{{ err }}</div>{% endfor %}
+      </div>
+    {% endif %}
+  </div>
+{% endmacro %}

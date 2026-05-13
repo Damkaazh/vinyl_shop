@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import product_card %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="section-eyebrow">{{ t.search }}</div>
+    <h1 style="font-style: italic;">{% if lang=='en' %}Results for{% else %}Результаты по запросу{% endif %} «{{ q }}»</h1>
+
+    {% if products %}
+      <h2 style="margin-top: var(--space-8);">{{ t.catalog }} <span style="font-family: var(--font-mono); font-size: 0.6em; color: var(--color-text-muted);">{{ products|length }}</span></h2>
+      <div class="product-grid" style="margin-top: var(--space-4);">
+        {% for p in products %}{{ product_card(p, lang) }}{% endfor %}
+      </div>
+    {% endif %}
+
+    {% if news_items %}
+      <h2 style="margin-top: var(--space-12);">{{ t.news }}</h2>
+      <div class="news-grid" style="margin-top: var(--space-4);">
+        {% for n in news_items %}
+          <a class="news-card" href="{{ url_for('main.news_detail', news_id=n.id) }}">
+            <div class="card-body">
+              <div class="meta">{{ n.published_at.strftime('%d.%m.%Y') }}</div>
+              <h3>{{ n.title(lang) }}</h3>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if not products and not news_items and q %}
+      <div style="padding: var(--space-16); text-align: center; color: var(--color-text-muted);">{% if lang=='en' %}Nothing found.{% else %}Ничего не найдено.{% endif %}</div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

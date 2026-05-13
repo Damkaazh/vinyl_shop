@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#efe2cb"/>
+  <g transform="translate(200,150)">
+    <circle r="120" fill="#0a0807"/>
+    <circle r="118" fill="none" stroke="#3a2a18" stroke-width="0.3"/>
+    <circle r="105" fill="none" stroke="#5a4a30" stroke-width="0.3"/>
+    <circle r="92" fill="none" stroke="#3a2a18" stroke-width="0.3"/>
+    <circle r="78" fill="none" stroke="#5a4a30" stroke-width="0.3"/>
+    <circle r="65" fill="none" stroke="#3a2a18" stroke-width="0.3"/>
+    <circle r="52" fill="none" stroke="#5a4a30" stroke-width="0.3"/>
+    <circle r="42" fill="#5a3a1a"/>
+    <circle r="40" fill="none" stroke="#fbf3df" stroke-width="0.5" opacity="0.3"/>
+    <text y="5" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="11" fill="#fbf3df" font-weight="700">ABBEY ROAD</text>
+    <circle r="6" fill="#0a0807"/>
+    <circle r="2" fill="#fbf3df"/>
+  </g>
+</svg>

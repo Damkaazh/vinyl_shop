@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="section"><div class="container-narrow" style="text-align:center; padding: var(--space-16) 0;">
+  <h1 style="font-style: italic; font-size: 6rem; color: var(--color-primary);">403</h1>
+  <p style="color: var(--color-text-muted);">Доступ запрещён.</p>
+  <a href="{{ url_for('main.index') }}" class="btn btn-outline" style="margin-top: var(--space-4);">На главную</a>
+</div></section>
+{% endblock %}

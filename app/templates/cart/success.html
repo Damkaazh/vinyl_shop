@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="section">
+  <div class="container-narrow">
+    <div class="form-card" style="text-align: center;">
+      <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="var(--color-success)" stroke-width="1.5" style="margin: 0 auto var(--space-4);">
+        <circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>
+      </svg>
+      <h1 style="font-style: italic;">{% if lang=='en' %}Order confirmed!{% else %}Заказ оформлен!{% endif %}</h1>
+      <p style="color: var(--color-text-muted); margin-top: var(--space-3);">{{ t.order_success }}</p>
+      <p style="margin-top: var(--space-4); font-family: var(--font-mono);">№ {{ order.id }} · {{ "{:,.0f}".format(order.total).replace(',', ' ') }} ₽</p>
+      <div style="margin-top: var(--space-6); display: flex; gap: var(--space-3); justify-content: center;">
+        <a href="{{ url_for('account.index') }}" class="btn btn-primary">{{ t.account }}</a>
+        <a href="{{ url_for('catalog.index') }}" class="btn btn-outline">{{ t.catalog }}</a>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

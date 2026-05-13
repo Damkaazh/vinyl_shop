@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import product_card %}
+
+{% block content %}
+
+<section class="hero">
+  <div class="container">
+    <span class="hero-eyebrow">{% if lang=='ru' %}С 2014 года · Уфа{% else %}Since 2014 · Ufa{% endif %}</span>
+    <h1>
+      {% if lang=='ru' %}
+        Винтажный звук <em>в каждой канавке</em> пластинки.
+      {% else %}
+        Vintage sound <em>in every groove</em> of vinyl.
+      {% endif %}
+    </h1>
+    <p>{{ t.tagline }} — отобранные вручную нашими мастерами.</p>
+    <div class="hero-actions">
+      <a href="{{ url_for('catalog.index') }}" class="btn btn-primary">{{ t.catalog }}</a>
+      <a href="#about" class="btn btn-outline">{{ t.about }}</a>
+    </div>
+
+    {# === Слайдер === #}
+    {% if slider_items %}
+    <div class="slider" data-slider aria-label="Featured">
+      <div class="slider-track">
+        {% for s in slider_items %}
+        <article class="slide">
+          <div class="slide-image">
+            <img src="{{ url_for('static', filename='img/' + s.image) }}" alt="">
+          </div>
+          <div>
+            <span class="slide-kind">
+              {% if s.kind == 'product' %}{% if lang=='en' %}Featured product{% else %}Хит продаж{% endif %}
+              {% else %}{% if lang=='en' %}News{% else %}Новости{% endif %}{% endif %}
+            </span>
+            <h2>{% if lang=='en' %}{{ s.title_en }}{% else %}{{ s.title_ru }}{% endif %}</h2>
+            <p>{% if lang=='en' %}{{ s.short_en }}{% else %}{{ s.short_ru }}{% endif %}</p>
+            {% if s.kind == 'product' %}<div class="slide-price">{{ "{:,.0f}".format(s.price).replace(',', ' ') }} ₽</div>{% endif %}
+            <a href="{{ s.url }}" class="btn btn-primary btn-sm">{{ t.details }}</a>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      <div class="slider-dots">
+        {% for s in slider_items %}<button aria-label="Slide {{ loop.index }}"></button>{% endfor %}
+      </div>
+      <div class="slider-controls">
+        <button class="slider-arrow" data-prev aria-label="Previous">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <button class="slider-arrow" data-next aria-label="Next">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+<section class="section" id="catalog">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow">{% if lang=='en' %}Categories{% else %}Категории{% endif %}</div>
+        <h2>{{ t.catalog }}</h2>
+      </div>
+    </div>
+    <div class="cat-grid">
+      {% for c in categories %}
+      <a href="{{ url_for('catalog.category', slug=c.slug) }}" class="cat-card">
+        <span class="num">0{{ loop.index }} / 0{{ categories|length }}</span>
+        <h3>{{ c.name(lang) }}</h3>
+        <p>{% if lang=='en' %}{{ c.description_en }}{% else %}{{ c.description_ru }}{% endif %}</p>
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5">
+          {% if c.slug == 'instruments' %}
+            <path d="M20 6c2 0 5 2 5 5 0 3-3 4-3 7-1 4-4 8-9 8-3 0-7-2-7-5 0-2 2-3 4-3 0 2 2 4 4 4 3 0 5-2 5-5 0-3 1-11 1-11z"/>
+          {% elif c.slug == 'vinyl' %}
+            <circle cx="16" cy="16" r="13"/><circle cx="16" cy="16" r="5"/><circle cx="16" cy="16" r="1.5" fill="currentColor"/>
+          {% else %}
+            <rect x="4" y="6" width="24" height="20" rx="2"/><circle cx="20" cy="16" r="6"/><circle cx="20" cy="16" r="1.5" fill="currentColor"/><path d="M8 22v-2"/>
+          {% endif %}
+        </svg>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section" id="featured">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow">{{ t.popular }}</div>
+        <h2>{% if lang=='en' %}Featured this week{% else %}Хиты этой недели{% endif %}</h2>
+      </div>
+      <a href="{{ url_for('catalog.index') }}" class="btn btn-outline btn-sm">{% if lang=='en' %}All products{% else %}Все товары{% endif %} →</a>
+    </div>
+    <div class="product-grid">
+      {% for p in featured_products %}{{ product_card(p, lang) }}{% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section about-section" id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div>
+        <div class="section-eyebrow">{{ t.about_us }}</div>
+        <h2>{% if lang=='en' %}Music in our hands since 2014.{% else %}Музыка в наших руках с 2014 года.{% endif %}</h2>
+        <p style="margin-top: 1.5rem; color: var(--color-text-muted);">{{ t.about_text }}</p>
+        <div class="stats-row">
+          <div class="stat"><div class="num">10K+</div><div class="label">{% if lang=='en' %}Customers{% else %}Покупателей{% endif %}</div></div>
+          <div class="stat"><div class="num">3500+</div><div class="label">{% if lang=='en' %}Vinyl titles{% else %}Пластинок{% endif %}</div></div>
+          <div class="stat"><div class="num">12</div><div class="label">{% if lang=='en' %}Years on stage{% else %}Лет на сцене{% endif %}</div></div>
+        </div>
+      </div>
+      <div>
+        <blockquote>
+          {% if lang=='en' %}
+            "Every record we sell has been carefully cleaned, listened to, and approved. The crackle of a needle is our daily soundtrack."
+          {% else %}
+            «Каждая пластинка у нас — почищена, прослушана и одобрена. Треск иглы — наш ежедневный саундтрек.»
+          {% endif %}
+        </blockquote>
+        <p style="margin-top: 1rem; font-family: var(--font-mono); color: var(--color-text-muted); font-size: 13px;">— {% if lang=='en' %}Founder of Vinyl Harbour{% else %}Основатель Виниловой Гавани{% endif %}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% if promotions %}
+<section class="section" id="promotions">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow">{{ t.promotions }}</div>
+        <h2>{% if lang=='en' %}Current offers{% else %}Действующие акции{% endif %}</h2>
+      </div>
+    </div>
+    <div class="promo-grid">
+      {% for pr in promotions %}
+      <article class="promo-card" {% if loop.index is divisibleby 2 %}data-variant="amber"{% endif %}>
+        {% if pr.discount_percent %}<div class="pct">-{{ pr.discount_percent }}%</div>{% endif %}
+        <h3>{{ pr.title(lang) }}</h3>
+        <p>{{ pr.body(lang) }}</p>
+        {% if pr.valid_until %}<small>{% if lang=='en' %}Valid until{% else %}До{% endif %} {{ pr.valid_until.strftime('%d.%m.%Y') }}</small>{% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if featured_news %}
+<section class="section" id="news">
+  <div class="container">
+    <div class="section-header">
+      <div>
+        <div class="section-eyebrow">{{ t.news }}</div>
+        <h2>{% if lang=='en' %}Latest from the harbour{% else %}Свежее из гавани{% endif %}</h2>
+      </div>
+      <a href="{{ url_for('main.news_list') }}" class="btn btn-outline btn-sm">{{ t.more_news }} →</a>
+    </div>
+    <div class="news-grid">
+      {% for n in featured_news %}
+      <a class="news-card" href="{{ url_for('main.news_detail', news_id=n.id) }}">
+        <div class="card-image"><img src="{{ url_for('static', filename='img/' + n.image) }}" alt=""></div>
+        <div class="card-body">
+          <div class="meta">{{ n.published_at.strftime('%d.%m.%Y') }} · ★ {{ n.avg_rating }}</div>
+          <h3>{{ n.title(lang) }}</h3>
+          <p style="color: var(--color-text-muted); font-size: 0.9rem; margin-top: 0.5rem;">{{ n.body(lang)[:120] }}…</p>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

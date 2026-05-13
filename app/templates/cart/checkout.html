@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import field %}
+{% block title %}{{ t.checkout }} — {{ t.site_name }}{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div style="margin-bottom: var(--space-8);">
+      <div class="section-eyebrow">{{ t.checkout }}</div>
+      <h1 style="font-style: italic;">{% if lang=='en' %}Place your order{% else %}Оформление заказа{% endif %}</h1>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 360px; gap: var(--space-8);">
+      <form method="post" class="form-card">
+        {{ form.hidden_tag() }}
+        <h3>{% if lang=='en' %}Customer details{% else %}Данные покупателя{% endif %}</h3>
+        <div class="form-grid-2">
+          {{ field(form.full_name) }}
+          {{ field(form.email, type='email') }}
+        </div>
+        <div class="form-grid-2">
+          {{ field(form.phone, type='tel') }}
+          {{ field(form.address) }}
+        </div>
+
+        <h3 style="margin-top: var(--space-6);">{{ t.delivery_method }}</h3>
+        <div class="form-row">{{ form.delivery_method(class_='input') }}</div>
+
+        <h3 style="margin-top: var(--space-6);">{{ t.payment_method }}</h3>
+        <div class="form-row">{{ form.payment_method(class_='input') }}</div>
+
+        {{ field(form.comment, type='textarea') }}
+
+        <div class="form-actions">
+          {{ form.submit(class_='btn btn-primary btn-block') }}
+        </div>
+      </form>
+
+      <aside class="cart-summary">
+        <h3>{% if lang=='en' %}Your order{% else %}Ваш заказ{% endif %}</h3>
+        {% for ci in items %}
+          <div class="row" style="font-size: 0.9rem;"><span>{{ ci.product.name(lang) }} × {{ ci.quantity }}</span><span style="font-family: var(--font-mono);">{{ "{:,.0f}".format(ci.subtotal).replace(',', ' ') }} ₽</span></div>
+        {% endfor %}
+        <div class="row total"><span>{{ t.total }}</span><span style="font-family: var(--font-mono); color: var(--color-primary);">{{ "{:,.0f}".format(total).replace(',', ' ') }} ₽</span></div>
+      </aside>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'admin/_layout.html' %}
+{% block admin_content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
+  <h1 style="font-style: italic;">Товары</h1>
+  <a href="{{ url_for('admin.product_new') }}" class="btn btn-primary">+ Новый товар</a>
+</div>
+
+<div class="table-card">
+  <table class="data">
+    <thead><tr><th></th><th>Название</th><th>Категория</th><th>Цена</th><th>Остаток</th><th></th></tr></thead>
+    <tbody>
+      {% for p in items %}
+      <tr>
+        <td><div style="width: 50px; height: 50px; border-radius: 4px; overflow: hidden; background: var(--color-surface-offset);"><img src="{{ url_for('static', filename='img/' + p.image) }}" alt="" style="width: 100%; height: 100%; object-fit: cover;"></div></td>
+        <td><strong>{{ p.name_ru }}</strong>{% if p.is_featured %} <span class="badge accent">FEATURED</span>{% endif %}<br><small style="color: var(--color-text-muted);">{{ p.name_en }}</small></td>
+        <td>{{ p.category.name_ru }}</td>
+        <td style="font-family: var(--font-mono); color: var(--color-primary);">{{ "{:,.0f}".format(p.price).replace(',', ' ') }} ₽</td>
+        <td>{{ p.stock }}</td>
+        <td style="white-space: nowrap;">
+          <a href="{{ url_for('admin.product_edit', product_id=p.id) }}" class="btn btn-outline btn-sm">Изм.</a>
+          <form method="post" action="{{ url_for('admin.product_delete', product_id=p.id) }}" style="display: inline;" onsubmit="return confirm('Удалить товар?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+            <button class="btn btn-danger btn-sm" type="submit">Удалить</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

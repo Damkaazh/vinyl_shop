@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 225">
+  <rect width="400" height="225" fill="#3a2a18"/>
+  <g transform="translate(200,112)">
+    <circle r="60" fill="#0a0807" opacity="0.85"/>
+    <circle r="58" fill="none" stroke="#b8862d" stroke-width="0.5"/>
+    <circle r="42" fill="none" stroke="#b8862d" stroke-width="0.4"/>
+    <circle r="22" fill="#b8862d"/>
+    <circle r="3" fill="#fbf3df"/>
+  </g>
+  <text x="200" y="200" text-anchor="middle" font-family="Georgia, serif" font-style="italic" font-size="14" fill="#fbf3df" opacity="0.7">RESTORATION</text>
+</svg>

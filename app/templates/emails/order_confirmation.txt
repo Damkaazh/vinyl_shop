@@ -1,0 +1,21 @@
+Здравствуйте, {{ order.full_name }}!
+
+Спасибо за заказ в магазине «Виниловая Гавань».
+
+Номер заказа: №{{ order.id }}
+Дата: {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}
+Сумма: {{ "{:,.0f}".format(order.total).replace(',', ' ') }} ₽
+
+Состав заказа:
+{% for item in order.items %}- {{ item.name }} × {{ item.quantity }} = {{ "{:,.0f}".format(item.subtotal).replace(',', ' ') }} ₽
+{% endfor %}
+
+Способ получения: {{ order.delivery_method }}
+Способ оплаты: {{ order.payment_method }}
+Адрес: {{ order.address }}
+Телефон: {{ order.phone }}
+{% if order.comment %}Комментарий: {{ order.comment }}{% endif %}
+
+Мы свяжемся с вами в ближайшее время для подтверждения.
+
+— Команда «Виниловой Гавани»
