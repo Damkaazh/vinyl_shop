@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, abort, g
+from flask import render_template, request, redirect, url_for, flash, abort, g, Response
 from flask_login import current_user, login_required
 from sqlalchemy import or_
 from . import bp
@@ -102,3 +102,16 @@ def detail(product_id):
 
     approved_reviews = Review.query.filter_by(product_id=product.id, is_approved=True).order_by(Review.created_at.desc()).all()
     return render_template("catalog/detail.html", product=product, form=form, reviews=approved_reviews)
+
+
+@bp.route("/<int:product_id>/audio")
+def product_audio(product_id):
+    """Отдаёт аудио-превью пластинки из БД (BYTEA в PostgreSQL)."""
+    product = Product.query.get_or_404(product_id)
+    if not product.audio_data:
+        abort(404)
+    response = Response(bytes(product.audio_data), mimetype=product.audio_mime or "audio/mpeg")
+    response.headers["Accept-Ranges"] = "bytes"
+    response.headers["Cache-Control"] = "public, max-age=3600"
+    response.headers["Content-Length"] = str(len(product.audio_data))
+    return response

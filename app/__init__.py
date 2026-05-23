@@ -66,10 +66,37 @@ def create_app(config_class=Config):
         from flask import render_template
         return render_template("errors/404.html"), 404
 
-    # Создаём таблицы и сидим демо-данные при первом запуске
+    # Создаём таблицы, выполняем авто-миграцию и сидим демо-данные при первом запуске
     with app.app_context():
         db.create_all()
+        _auto_migrate(db)
         from .seed import seed_if_empty
         seed_if_empty()
 
     return app
+
+
+def _auto_migrate(db):
+    """Добавляет недостающие колонки в существующую БД (без Flask-Migrate).
+
+    Нужно для новых полей audio_data / audio_mime / audio_name в products —
+    чтобы не заводить миграции вручную. Работает и на PostgreSQL, и на SQLite.
+    """
+    from sqlalchemy import inspect, text
+    insp = inspect(db.engine)
+    if "products" not in insp.get_table_names():
+        return
+    existing = {c["name"] for c in insp.get_columns("products")}
+    dialect = db.engine.dialect.name  # 'postgresql' или 'sqlite'
+    blob_type = "BYTEA" if dialect == "postgresql" else "BLOB"
+    statements = []
+    if "audio_data" not in existing:
+        statements.append(f"ALTER TABLE products ADD COLUMN audio_data {blob_type}")
+    if "audio_mime" not in existing:
+        statements.append("ALTER TABLE products ADD COLUMN audio_mime VARCHAR(64)")
+    if "audio_name" not in existing:
+        statements.append("ALTER TABLE products ADD COLUMN audio_name VARCHAR(255)")
+    if statements:
+        with db.engine.begin() as conn:
+            for sql in statements:
+                conn.execute(text(sql))

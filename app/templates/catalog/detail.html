@@ -31,6 +31,23 @@
 
         <p style="color: var(--color-text-muted); margin: var(--space-4) 0;">{{ product.short(lang) or product.description(lang)[:200] }}</p>
 
+        {% if product.category.slug == 'vinyl' and product.has_audio %}
+        <div class="audio-preview">
+          <div class="audio-preview__head">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
+              <circle cx="12" cy="12" r="9"/>
+              <circle cx="12" cy="12" r="3" fill="currentColor"/>
+              <path d="M12 3a9 9 0 0 1 9 9"/>
+            </svg>
+            <div>
+              <div class="audio-preview__title">{% if lang=='en' %}Listen to a sample{% else %}Послушать отрывок{% endif %}</div>
+              <div class="audio-preview__sub">{% if lang=='en' %}15–25 second preview from the record{% else %}демо-фрагмент пластинки, 15–25 секунд{% endif %}</div>
+            </div>
+          </div>
+          <audio controls preload="none" src="{{ url_for('catalog.product_audio', product_id=product.id) }}"></audio>
+        </div>
+        {% endif %}
+
         {% if current_user.is_authenticated %}
           <form method="post" action="{{ url_for('cart.add', product_id=product.id) }}" style="display: flex; gap: var(--space-3); flex-wrap: wrap;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">

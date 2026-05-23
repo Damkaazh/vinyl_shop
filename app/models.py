@@ -98,7 +98,14 @@ class Product(db.Model):
     stock = db.Column(db.Integer, default=0)
     image = db.Column(db.String(255), default="placeholder.svg")
     is_featured = db.Column(db.Boolean, default=False)  # для слайдера
+    audio_data = db.Column(db.LargeBinary, nullable=True)  # аудио-превью для пластинки (BYTEA в PostgreSQL)
+    audio_mime = db.Column(db.String(64), nullable=True)   # например audio/mpeg, audio/ogg
+    audio_name = db.Column(db.String(255), nullable=True)  # исходное имя файла
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def has_audio(self):
+        return bool(self.audio_data)
 
     images = db.relationship("ProductImage", backref="product", lazy="dynamic", cascade="all, delete-orphan")
     reviews = db.relationship("Review", backref="product", lazy="dynamic", cascade="all, delete-orphan")

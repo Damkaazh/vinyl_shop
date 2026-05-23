@@ -37,6 +37,28 @@ def products():
     return render_template("admin/products.html", items=items)
 
 
+AUDIO_MIME_BY_EXT = {
+    "mp3": "audio/mpeg",
+    "ogg": "audio/ogg",
+    "wav": "audio/wav",
+    "m4a": "audio/mp4",
+    "aac": "audio/aac",
+}
+
+
+def _read_audio_upload(file_storage):
+    """Читает загруженный аудио-файл в (bytes, mime, original_name)."""
+    if not file_storage or not getattr(file_storage, "filename", ""):
+        return None
+    data = file_storage.read()
+    if not data:
+        return None
+    name = file_storage.filename
+    ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    mime = AUDIO_MIME_BY_EXT.get(ext, file_storage.mimetype or "application/octet-stream")
+    return data, mime, name
+
+
 @bp.route("/products/new", methods=["GET", "POST"])
 def product_new():
     form = ProductForm()
@@ -53,6 +75,9 @@ def product_new():
             stock=form.stock.data, is_featured=form.is_featured.data,
             image=image or "placeholder.svg",
         )
+        audio = _read_audio_upload(form.audio.data)
+        if audio:
+            p.audio_data, p.audio_mime, p.audio_name = audio
         db.session.add(p)
         db.session.commit()
         flash("Товар добавлен.", "success")
@@ -78,6 +103,11 @@ def product_edit(product_id):
         p.is_featured = form.is_featured.data
         if image:
             p.image = image
+        audio = _read_audio_upload(form.audio.data)
+        if audio:
+            p.audio_data, p.audio_mime, p.audio_name = audio
+        if request.form.get("remove_audio"):
+            p.audio_data, p.audio_mime, p.audio_name = None, None, None
         db.session.commit()
         flash("Товар обновлён.", "success")
         return redirect(url_for("admin.products"))

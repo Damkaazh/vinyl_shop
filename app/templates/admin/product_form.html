@@ -33,6 +33,22 @@
     {{ form.image(class_='input') }}
   </div>
 
+  <div class="form-row">
+    {{ form.audio.label }}
+    {% if item and item.has_audio %}
+      <div style="margin-bottom: 8px; display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap;">
+        <span class="badge accent">Демо-трек загружен</span>
+        <span style="font-family: var(--font-mono); font-size: 12px; color: var(--color-text-muted);">{{ item.audio_name or 'без имени' }} · {{ item.audio_mime or 'audio/mpeg' }}</span>
+        <audio controls preload="none" src="{{ url_for('catalog.product_audio', product_id=item.id) }}" style="height: 36px;"></audio>
+        <label class="checkbox" style="font-size: 13px;">
+          <input type="checkbox" name="remove_audio" value="1"> Удалить текущий трек
+        </label>
+      </div>
+    {% endif %}
+    {{ form.audio(class_='input', accept='audio/mpeg,audio/mp3,audio/ogg,audio/wav,audio/x-m4a,audio/aac') }}
+    <div style="font-size: 12px; color: var(--color-text-muted); margin-top: 4px;">MP3 / OGG / WAV / M4A / AAC. Рекомендуемый фрагмент — 15–25 секунд.</div>
+  </div>
+
   <div class="form-actions">
     {{ form.submit(class_='btn btn-primary') }}
     <a href="{{ url_for('admin.products') }}" class="btn btn-ghost">Отмена</a>

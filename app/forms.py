@@ -108,6 +108,10 @@ class ProductForm(FlaskForm):
     stock = IntegerField("Остаток", validators=[DataRequired(), NumberRange(min=0)])
     is_featured = BooleanField("Показывать на главной")
     image = FileField("Изображение", validators=[Optional(), FileAllowed(["jpg", "jpeg", "png", "gif", "webp"])])
+    audio = FileField("Аудио-превью (для пластинок)", validators=[
+        Optional(),
+        FileAllowed(["mp3", "ogg", "wav", "m4a", "aac"], "Только аудио-файлы"),
+    ])
     submit = SubmitField("Сохранить")
 
 
