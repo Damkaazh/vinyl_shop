@@ -18,7 +18,7 @@ class Config:
 
     # Загрузки (аватары, изображения товаров)
     UPLOAD_FOLDER = BASE_DIR / "app" / "static" / "uploads"
-    MAX_CONTENT_LENGTH = 8 * 1024 * 1024  # 8 МБ
+    MAX_CONTENT_LENGTH = 25 * 1024 * 1024  # 25 МБ — хватит для аудио-фрагментов и картинок
     ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
     # Почта (SMTP)

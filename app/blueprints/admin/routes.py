@@ -48,14 +48,16 @@ AUDIO_MIME_BY_EXT = {
 
 def _read_audio_upload(file_storage):
     """Читает загруженный аудио-файл в (bytes, mime, original_name)."""
-    if not file_storage or not getattr(file_storage, "filename", ""):
+    if not file_storage or not hasattr(file_storage, "read"):
+        return None
+    name = getattr(file_storage, "filename", "")
+    if not name:
         return None
     data = file_storage.read()
     if not data:
         return None
-    name = file_storage.filename
     ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
-    mime = AUDIO_MIME_BY_EXT.get(ext, file_storage.mimetype or "application/octet-stream")
+    mime = AUDIO_MIME_BY_EXT.get(ext, getattr(file_storage, "mimetype", None) or "application/octet-stream")
     return data, mime, name
 
 
@@ -64,24 +66,30 @@ def product_new():
     form = ProductForm()
     form.category_id.choices = [(c.id, c.name_ru) for c in Category.query.order_by(Category.id).all()]
     if form.validate_on_submit():
-        image = save_upload(form.image.data, subdir="products") if form.image.data else None
-        p = Product(
-            category_id=form.category_id.data,
-            name_ru=form.name_ru.data, name_en=form.name_en.data,
-            short_ru=form.short_ru.data or "", short_en=form.short_en.data or "",
-            description_ru=form.description_ru.data or "", description_en=form.description_en.data or "",
-            specs_ru=form.specs_ru.data or "", specs_en=form.specs_en.data or "",
-            price=form.price.data, old_price=form.old_price.data,
-            stock=form.stock.data, is_featured=form.is_featured.data,
-            image=image or "placeholder.svg",
-        )
-        audio = _read_audio_upload(form.audio.data)
-        if audio:
-            p.audio_data, p.audio_mime, p.audio_name = audio
-        db.session.add(p)
-        db.session.commit()
-        flash("Товар добавлен.", "success")
-        return redirect(url_for("admin.products"))
+        try:
+            image = save_upload(form.image.data, subdir="products") if form.image.data else None
+            p = Product(
+                category_id=form.category_id.data,
+                name_ru=form.name_ru.data, name_en=form.name_en.data,
+                short_ru=form.short_ru.data or "", short_en=form.short_en.data or "",
+                description_ru=form.description_ru.data or "", description_en=form.description_en.data or "",
+                specs_ru=form.specs_ru.data or "", specs_en=form.specs_en.data or "",
+                price=form.price.data, old_price=form.old_price.data,
+                stock=form.stock.data, is_featured=form.is_featured.data,
+                image=image or "placeholder.svg",
+            )
+            audio = _read_audio_upload(form.audio.data)
+            if audio:
+                p.audio_data, p.audio_mime, p.audio_name = audio
+            db.session.add(p)
+            db.session.commit()
+            flash("Товар добавлен.", "success")
+            return redirect(url_for("admin.products"))
+        except Exception as exc:
+            db.session.rollback()
+            from flask import current_app
+            current_app.logger.exception("Не удалось сохранить товар")
+            flash(f"Ошибка сохранения: {exc}", "danger")
     return render_template("admin/product_form.html", form=form, item=None)
 
 
@@ -91,26 +99,32 @@ def product_edit(product_id):
     form = ProductForm(obj=p)
     form.category_id.choices = [(c.id, c.name_ru) for c in Category.query.order_by(Category.id).all()]
     if form.validate_on_submit():
-        image = save_upload(form.image.data, subdir="products") if form.image.data else None
-        p.category_id = form.category_id.data
-        p.name_ru, p.name_en = form.name_ru.data, form.name_en.data
-        p.short_ru, p.short_en = form.short_ru.data or "", form.short_en.data or ""
-        p.description_ru, p.description_en = form.description_ru.data or "", form.description_en.data or ""
-        p.specs_ru, p.specs_en = form.specs_ru.data or "", form.specs_en.data or ""
-        p.price = form.price.data
-        p.old_price = form.old_price.data
-        p.stock = form.stock.data
-        p.is_featured = form.is_featured.data
-        if image:
-            p.image = image
-        audio = _read_audio_upload(form.audio.data)
-        if audio:
-            p.audio_data, p.audio_mime, p.audio_name = audio
-        if request.form.get("remove_audio"):
-            p.audio_data, p.audio_mime, p.audio_name = None, None, None
-        db.session.commit()
-        flash("Товар обновлён.", "success")
-        return redirect(url_for("admin.products"))
+        try:
+            image = save_upload(form.image.data, subdir="products") if form.image.data else None
+            p.category_id = form.category_id.data
+            p.name_ru, p.name_en = form.name_ru.data, form.name_en.data
+            p.short_ru, p.short_en = form.short_ru.data or "", form.short_en.data or ""
+            p.description_ru, p.description_en = form.description_ru.data or "", form.description_en.data or ""
+            p.specs_ru, p.specs_en = form.specs_ru.data or "", form.specs_en.data or ""
+            p.price = form.price.data
+            p.old_price = form.old_price.data
+            p.stock = form.stock.data
+            p.is_featured = form.is_featured.data
+            if image:
+                p.image = image
+            audio = _read_audio_upload(form.audio.data)
+            if audio:
+                p.audio_data, p.audio_mime, p.audio_name = audio
+            if request.form.get("remove_audio"):
+                p.audio_data, p.audio_mime, p.audio_name = None, None, None
+            db.session.commit()
+            flash("Товар обновлён.", "success")
+            return redirect(url_for("admin.products"))
+        except Exception as exc:
+            db.session.rollback()
+            from flask import current_app
+            current_app.logger.exception("Не удалось обновить товар")
+            flash(f"Ошибка сохранения: {exc}", "danger")
     return render_template("admin/product_form.html", form=form, item=p)
 
 

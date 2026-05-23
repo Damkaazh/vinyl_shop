@@ -18,12 +18,17 @@ def allowed_file(filename):
 
 
 def save_upload(file_storage, subdir=""):
-    """Сохраняет файл с уникальным именем, возвращает имя файла."""
-    if not file_storage or not file_storage.filename:
+    """Сохраняет файл с уникальным именем, возвращает имя файла.
+
+    Безопасно обрабатывает случаи, когда вместо FileStorage приходит строка
+    (так бывает, когда FlaskForm(obj=...) подставляет в FileField текущее имя файла из МОДЕЛИ).
+    """
+    filename = getattr(file_storage, "filename", None)
+    if not file_storage or not filename or not hasattr(file_storage, "save"):
         return None
-    if not allowed_file(file_storage.filename):
+    if not allowed_file(filename):
         return None
-    ext = file_storage.filename.rsplit(".", 1)[1].lower()
+    ext = filename.rsplit(".", 1)[1].lower()
     new_name = f"{secrets.token_hex(8)}.{ext}"
     folder = Path(current_app.config["UPLOAD_FOLDER"]) / subdir if subdir else Path(current_app.config["UPLOAD_FOLDER"])
     folder.mkdir(parents=True, exist_ok=True)
