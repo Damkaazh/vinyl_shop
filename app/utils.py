@@ -45,17 +45,15 @@ def admin_required(f):
 
 
 def _send_email(recipient: str, subject: str, text_body: str, html_body: str | None = None) -> bool:
-    """Универсальная отправка письма. Нет SMTP — пишет в instance/emails.log."""
-    sender = current_app.config.get("MAIL_DEFAULT_SENDER")
+    """Универсальная отправка письма в фоновом потоке."""
     suppress = current_app.config.get("MAIL_SUPPRESS_SEND")
     smtp_user = current_app.config.get("MAIL_USERNAME")
-    log_path = Path(current_app.instance_path) / "emails.log"
 
     if suppress or not smtp_user:
-        with open(log_path, "a", encoding="utf-8") as f:
-            f.write(f"\n=== TO: {recipient} | SUBJECT: {subject} ===\n{text_body}\n")
+        current_app.logger.info(f"MAIL SUPPRESSED TO: {recipient} | {subject}")
         return False
 
+    sender = current_app.config.get("MAIL_DEFAULT_SENDER")
     msg = Message(subject=subject, recipients=[recipient], sender=sender)
     msg.body = text_body
     if html_body:
@@ -67,10 +65,9 @@ def _send_email(recipient: str, subject: str, text_body: str, html_body: str | N
         with app.app_context():
             try:
                 mail.send(msg)
+                app.logger.info(f"MAIL SENT OK TO: {recipient}")
             except Exception as e:
-                app.logger.error(f"Mail send failed: {e}")
-                with open(log_path, "a", encoding="utf-8") as f:
-                    f.write(f"\n=== FAILED TO: {recipient} | {e} ===\n{text_body}\n")
+                app.logger.error(f"MAIL FAILED TO: {recipient} | {e}")
 
     threading.Thread(target=_send, daemon=True).start()
     return True
@@ -99,14 +96,3 @@ def send_login_notification(user, ip: str = "", user_agent: str = ""):
     html = render_template("emails/login_alert.html", user=user, ip=ip, user_agent=user_agent, now_str=now_str)
     text = render_template("emails/login_alert.txt", user=user, ip=ip, user_agent=user_agent, now_str=now_str)
     return _send_email(user.email, subject, text, html)
-
-def _send():
-    with app.app_context():
-        try:
-            mail.send(msg)
-            with open(log_path, "a", encoding="utf-8") as f:
-                f.write(f"\n=== SENT OK TO: {recipient} | {subject} ===\n")
-        except Exception as e:
-            app.logger.error(f"Mail send failed: {e}")
-            with open(log_path, "a", encoding="utf-8") as f:
-                f.write(f"\n=== FAILED TO: {recipient} | {e} ===\n")
