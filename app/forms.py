@@ -85,7 +85,6 @@ class CheckoutForm(FlaskForm):
         ("post", "Почта России"),
     ], validators=[DataRequired()])
     payment_method = SelectField("Способ оплаты", choices=[
-        ("card", "Картой онлайн"),
         ("cash", "Наличными при получении"),
         ("sbp", "СБП"),
     ], validators=[DataRequired()])

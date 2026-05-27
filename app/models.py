@@ -163,7 +163,7 @@ class Order(db.Model):
     phone = db.Column(db.String(40), nullable=False)
     address = db.Column(db.String(255), nullable=False)
     delivery_method = db.Column(db.String(40), default="pickup")  # pickup / courier / post
-    payment_method = db.Column(db.String(40), default="card")  # card / cash / sbp
+    payment_method = db.Column(db.String(40), default="cash")  # cash / sbp (картой онлайн отключена)
     comment = db.Column(db.Text, default="")
     total = db.Column(db.Numeric(10, 2), nullable=False)
     status = db.Column(db.String(40), default="new")  # new / paid / shipped / done / canceled
