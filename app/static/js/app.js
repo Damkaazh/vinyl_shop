@@ -162,3 +162,108 @@
     });
   }, 5000);
 })();
+
+// === Патч 1 ===========================================================
+
+// Язык кнопок (для ариа-лейблов). Берём из <html lang>.
+const LANG = (document.documentElement.lang || 'ru').toLowerCase().startsWith('en') ? 'en' : 'ru';
+const L = {
+  ru: { show: 'Показать пароль', hide: 'Скрыть пароль' },
+  en: { show: 'Show password', hide: 'Hide password' },
+}[LANG];
+
+// === Кнопка «показать пароль» — оборачиваем любой input[type=password] ===
+(function () {
+  const EYE = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const EYE_OFF = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 3l18 18M10.5 6.2A10 10 0 0 1 12 6c6.5 0 10 6 10 6a17 17 0 0 1-3.3 4M6.6 6.6A17 17 0 0 0 2 12s3.5 6 10 6c1.6 0 3-.3 4.3-.8"/><path d="M14.1 14.1A3 3 0 0 1 9.9 9.9"/></svg>';
+  document.querySelectorAll('input[type="password"]').forEach((input) => {
+    if (input.dataset.pwReady) return;
+    input.dataset.pwReady = '1';
+    const wrap = document.createElement('div');
+    wrap.className = 'pw-wrap';
+    input.parentNode.insertBefore(wrap, input);
+    wrap.appendChild(input);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'pw-toggle';
+    btn.setAttribute('aria-label', L.show);
+    btn.title = L.show;
+    btn.innerHTML = EYE;
+    btn.addEventListener('click', () => {
+      const shown = input.type === 'text';
+      input.type = shown ? 'password' : 'text';
+      btn.innerHTML = shown ? EYE : EYE_OFF;
+      btn.setAttribute('aria-label', shown ? L.show : L.hide);
+      btn.title = shown ? L.show : L.hide;
+      btn.setAttribute('aria-pressed', shown ? 'false' : 'true');
+    });
+    wrap.appendChild(btn);
+  });
+})();
+
+// === Маска телефона +7 (___) ___-__-__ ===
+(function () {
+  function format(digits) {
+    // нормализуем: любая ведущая “8” → “7”, обрезаем по 11
+    let d = digits.replace(/\D/g, '');
+    if (d.startsWith('8')) d = '7' + d.slice(1);
+    if (d.length && !d.startsWith('7')) d = '7' + d;
+    d = d.slice(0, 11);
+    let out = '+7';
+    if (d.length > 1) out += ' (' + d.slice(1, 4);
+    if (d.length >= 4) out += ')';
+    if (d.length >= 5) out += ' ' + d.slice(4, 7);
+    if (d.length >= 8) out += '-' + d.slice(7, 9);
+    if (d.length >= 10) out += '-' + d.slice(9, 11);
+    return out;
+  }
+  function apply(input) {
+    if (input.dataset.maskReady) return;
+    input.dataset.maskReady = '1';
+    input.setAttribute('inputmode', 'tel');
+    input.setAttribute('placeholder', '+7 (___) ___-__-__');
+    const reformat = () => {
+      const v = input.value;
+      if (!v) return;
+      input.value = format(v);
+    };
+    input.addEventListener('input', reformat);
+    input.addEventListener('focus', () => { if (!input.value) input.value = '+7 ('; });
+    input.addEventListener('blur', () => { if (input.value.replace(/\D/g, '').length <= 1) input.value = ''; });
+    if (input.value) reformat();
+  }
+  document.querySelectorAll('input[type="tel"], input[name="phone"], [data-phone]').forEach(apply);
+})();
+
+// === Модалка «Скоро откроем» для data-soon ссылок (ВК / МАКС) ===
+(function () {
+  const overlay = document.querySelector('[data-soon-modal]');
+  if (!overlay) return;
+  const closeBtn = overlay.querySelector('[data-soon-close]');
+  const iconBox = overlay.querySelector('[data-soon-icon]');
+  const ICONS = {
+    vk: '<svg width="36" height="36" viewBox="0 0 32 32" fill="currentColor"><text x="16" y="22" text-anchor="middle" font-family="Inter, sans-serif" font-weight="800" font-size="15">VK</text></svg>',
+    max: '<svg width="36" height="36" viewBox="0 0 32 32" fill="currentColor"><text x="16" y="22" text-anchor="middle" font-family="Inter, sans-serif" font-weight="800" font-size="13">MAX</text></svg>',
+    default: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  };
+  function open(kind) {
+    if (iconBox) iconBox.innerHTML = ICONS[kind] || ICONS.default;
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add('is-open'));
+    document.body.style.overflow = 'hidden';
+  }
+  function close() {
+    overlay.classList.remove('is-open');
+    document.body.style.overflow = '';
+    setTimeout(() => { overlay.hidden = true; }, 220);
+  }
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('[data-soon]');
+    if (!a) return;
+    e.preventDefault();
+    open(a.dataset.soon);
+  });
+  if (closeBtn) closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !overlay.hidden) close(); });
+})();

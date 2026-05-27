@@ -108,10 +108,18 @@
 
       <div>
         <h4>{{ t.contacts }}</h4>
-        <a href="tel:+78001234567">{{ t.phone }}: +7 (800) 123-45-67</a>
-        <a href="mailto:hello@vinyl-harbour.local">{{ t.email }}: hello@vinyl-harbour.local</a>
-        <a href="#">Telegram: @vinylharbour</a>
-        <a href="#">VK: vk.com/vinylharbour</a>
+        <a href="tel:+78001234567">{{ t.phone }}: <span class="nowrap">+7&nbsp;(800)&nbsp;123‑45‑67</span></a>
+        <a href="mailto:hello@vinyl-harbour.local">{{ t.email }}: <span class="nowrap">hello@vinyl‑harbour.local</span></a>
+        <div class="social-row">
+          <a href="#" class="social-link" data-soon="vk" aria-label="{{ t.vk }}" title="{{ t.vk }}">
+            <span class="social-tag">VK</span>
+            <span>{{ t.vk }}</span>
+          </a>
+          <a href="#" class="social-link" data-soon="max" aria-label="{{ t.max }}" title="{{ t.max }}">
+            <span class="social-tag">MAX</span>
+            <span>{{ t.max }}</span>
+          </a>
+        </div>
       </div>
 
       <div>
@@ -124,7 +132,7 @@
 
       <div>
         <h4>{{ t.address }}</h4>
-        <p style="font-size: 0.875rem; color: var(--color-text-muted);">г. Уфа, ул. Ленина, 12<br>пн-вс 10:00–21:00</p>
+        <p style="font-size: 0.875rem; color: var(--color-text-muted);">г. Уфа, ул. Ленина, 12<br><span class="nowrap">пн‑вс 10:00–21:00</span></p>
         <div class="map-embed">
           <iframe src="https://yandex.ru/map-widget/v1/?ll=55.957727%2C54.735152&z=14&pt=55.957727,54.735152,pm2rdm" loading="lazy" allowfullscreen title="Карта"></iframe>
         </div>
@@ -136,6 +144,24 @@
     </div>
   </div>
 </footer>
+
+<!-- Попап «Скоро откроем» для соцсетей -->
+<div class="modal-overlay" data-soon-modal hidden role="dialog" aria-modal="true" aria-labelledby="soon-title">
+  <div class="modal-card">
+    <button class="modal-close" data-soon-close aria-label="{{ t.close }}">×</button>
+    <div class="modal-icon" data-soon-icon></div>
+    <h3 id="soon-title">{{ t.soon_title }}</h3>
+    <p>{{ t.soon_text }}</p>
+    <a href="mailto:hello@vinyl-harbour.local" class="btn btn-primary">hello@vinyl-harbour.local</a>
+  </div>
+</div>
+
+<!-- Декоративные вращающиеся пластинки на фоне -->
+<div class="vinyl-bg" aria-hidden="true">
+  <span class="vinyl-bg__disc vinyl-bg__disc--1"></span>
+  <span class="vinyl-bg__disc vinyl-bg__disc--2"></span>
+  <span class="vinyl-bg__disc vinyl-bg__disc--3"></span>
+</div>
 
 <script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
 </body>
