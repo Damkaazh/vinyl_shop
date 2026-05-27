@@ -5,7 +5,7 @@ from . import bp
 from ...extensions import db
 from ...forms import RegistrationForm, LoginForm, ForgotPasswordForm
 from ...models import User, LoginSession
-from ...utils import save_upload
+from ...utils import save_upload, send_welcome_email, send_login_notification
 
 
 @bp.route("/register", methods=["GET", "POST"])
@@ -45,6 +45,10 @@ def register():
         db.session.commit()
         login_user(user)
         _record_session(user)
+        try:
+            send_welcome_email(user)
+        except Exception:
+            pass  # письмо не должно ломать регистрацию
         flash("Регистрация прошла успешно. Добро пожаловать!", "success")
         return redirect(url_for("account.index"))
     return render_template("auth/register.html", form=form)
@@ -63,6 +67,14 @@ def login():
             return render_template("auth/login.html", form=form)
         login_user(user, remember=form.remember.data)
         _record_session(user)
+        try:
+            send_login_notification(
+                user,
+                ip=request.headers.get("X-Forwarded-For", request.remote_addr or ""),
+                user_agent=request.user_agent.string if request.user_agent else "",
+            )
+        except Exception:
+            pass  # письмо не должно ломать вход
         flash("Вход выполнен.", "success")
         next_url = request.args.get("next") or url_for("account.index")
         return redirect(next_url)

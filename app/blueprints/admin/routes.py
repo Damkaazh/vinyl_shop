@@ -3,8 +3,8 @@ from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
 from . import bp
 from ...extensions import db
-from ...models import Product, Category, News, Promotion, Review, Order, User
-from ...forms import ProductForm, NewsForm, PromotionForm
+from ...models import Product, Category, News, Promotion, Review, Order, User, PromoCode
+from ...forms import ProductForm, NewsForm, PromotionForm, PromoCodeForm
 from ...utils import admin_required, save_upload
 
 
@@ -262,3 +262,65 @@ def order_status(order_id):
     db.session.commit()
     flash("Статус заказа обновлён.", "success")
     return redirect(url_for("admin.orders"))
+
+
+# ===== Промокоды =====
+@bp.route("/promocodes")
+def promocodes():
+    items = PromoCode.query.order_by(PromoCode.created_at.desc()).all()
+    return render_template("admin/promocodes.html", items=items)
+
+
+@bp.route("/promocodes/new", methods=["GET", "POST"])
+def promocode_new():
+    form = PromoCodeForm()
+    if form.validate_on_submit():
+        code_value = form.code.data.strip().upper()
+        if PromoCode.query.filter_by(code=code_value).first():
+            form.code.errors.append("Такой промокод уже существует.")
+            return render_template("admin/promocode_form.html", form=form, item=None)
+        pc = PromoCode(
+            code=code_value,
+            discount_type=form.discount_type.data,
+            discount_value=form.discount_value.data,
+            min_order=form.min_order.data or 0,
+            usage_limit=form.usage_limit.data or 0,
+            valid_until=form.valid_until.data,
+            is_active=form.is_active.data,
+        )
+        db.session.add(pc)
+        db.session.commit()
+        flash("Промокод создан.", "success")
+        return redirect(url_for("admin.promocodes"))
+    return render_template("admin/promocode_form.html", form=form, item=None)
+
+
+@bp.route("/promocodes/<int:promo_id>/edit", methods=["GET", "POST"])
+def promocode_edit(promo_id):
+    pc = PromoCode.query.get_or_404(promo_id)
+    form = PromoCodeForm(obj=pc)
+    if form.validate_on_submit():
+        new_code = form.code.data.strip().upper()
+        if new_code != pc.code and PromoCode.query.filter_by(code=new_code).first():
+            form.code.errors.append("Такой промокод уже существует.")
+            return render_template("admin/promocode_form.html", form=form, item=pc)
+        pc.code = new_code
+        pc.discount_type = form.discount_type.data
+        pc.discount_value = form.discount_value.data
+        pc.min_order = form.min_order.data or 0
+        pc.usage_limit = form.usage_limit.data or 0
+        pc.valid_until = form.valid_until.data
+        pc.is_active = form.is_active.data
+        db.session.commit()
+        flash("Промокод обновлён.", "success")
+        return redirect(url_for("admin.promocodes"))
+    return render_template("admin/promocode_form.html", form=form, item=pc)
+
+
+@bp.route("/promocodes/<int:promo_id>/delete", methods=["POST"])
+def promocode_delete(promo_id):
+    pc = PromoCode.query.get_or_404(promo_id)
+    db.session.delete(pc)
+    db.session.commit()
+    flash("Промокод удалён.", "info")
+    return redirect(url_for("admin.promocodes"))

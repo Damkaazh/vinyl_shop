@@ -1,0 +1,46 @@
+{% extends 'admin/_layout.html' %}
+{% from '_macros.html' import field %}
+{% block admin_content %}
+<h1 style="font-style: italic; margin-bottom: var(--space-6);">
+  {% if item %}Редактирование промокода{% else %}Новый промокод{% endif %}
+</h1>
+<form method="post" class="form-card">
+  {{ form.hidden_tag() }}
+
+  <div class="form-grid-2">
+    {{ field(form.code, placeholder='WELCOME10') }}
+    <div class="form-row">
+      {{ form.discount_type.label }}
+      {{ form.discount_type(class_='input') }}
+    </div>
+  </div>
+
+  <div class="form-grid-2">
+    {{ field(form.discount_value, placeholder='10') }}
+    {{ field(form.min_order, placeholder='0') }}
+  </div>
+
+  <div class="form-grid-2">
+    {{ field(form.usage_limit, placeholder='0') }}
+    <div class="form-row">
+      {{ form.valid_until.label }}
+      {{ form.valid_until(class_='input', type='date') }}
+    </div>
+  </div>
+
+  <div class="form-row" style="display: flex; align-items: center; gap: var(--space-3);">
+    {{ form.is_active() }}
+    {{ form.is_active.label(style='margin: 0;') }}
+  </div>
+
+  <div style="margin-top: var(--space-4); padding: var(--space-4); background: var(--color-surface-offset); border-radius: var(--radius-md); font-size: 0.9rem; color: var(--color-text-muted);">
+    <strong>Подсказка.</strong> Для процентной скидки укажите значение от 1 до 100, для фиксированной — сумму в&nbsp;₽.
+    Лимит «0» = без ограничений. Минимальная сумма «0» = промокод действует на любые заказы.
+  </div>
+
+  <div class="form-actions">
+    {{ form.submit(class_='btn btn-primary') }}
+    <a href="{{ url_for('admin.promocodes') }}" class="btn btn-ghost">Отмена</a>
+  </div>
+</form>
+{% endblock %}

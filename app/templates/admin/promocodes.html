@@ -1,0 +1,55 @@
+{% extends 'admin/_layout.html' %}
+{% block admin_content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);">
+  <h1 style="font-style: italic;">Промокоды</h1>
+  <a href="{{ url_for('admin.promocode_new') }}" class="btn btn-primary">+ Новый</a>
+</div>
+<div class="table-card">
+  <table class="data" style="white-space: nowrap;">
+    <thead>
+      <tr>
+        <th>Код</th>
+        <th>Скидка</th>
+        <th>Мин. сумма</th>
+        <th>Использовано</th>
+        <th>Действует до</th>
+        <th>Статус</th>
+        <th style="white-space: nowrap;">Действия</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in items %}
+      <tr>
+        <td><strong style="font-family: var(--font-mono);">{{ p.code }}</strong></td>
+        <td>
+          {% if p.discount_type == 'percent' %}
+            −{{ "{:.0f}".format(p.discount_value) }}%
+          {% else %}
+            −{{ "{:,.0f}".format(p.discount_value).replace(',', '\u00a0') }}&nbsp;₽
+          {% endif %}
+        </td>
+        <td>{% if p.min_order and p.min_order > 0 %}{{ "{:,.0f}".format(p.min_order).replace(',', '\u00a0') }}&nbsp;₽{% else %}—{% endif %}</td>
+        <td>{{ p.used_count }}{% if p.usage_limit %}&nbsp;/&nbsp;{{ p.usage_limit }}{% else %}&nbsp;/&nbsp;∞{% endif %}</td>
+        <td>{{ p.valid_until.strftime('%d.%m.%Y') if p.valid_until else '—' }}</td>
+        <td>
+          {% if p.is_active %}
+            <span class="stock-badge">Активен</span>
+          {% else %}
+            <span class="stock-badge out">Выключен</span>
+          {% endif %}
+        </td>
+        <td style="white-space: nowrap;">
+          <a href="{{ url_for('admin.promocode_edit', promo_id=p.id) }}" class="btn btn-ghost btn-sm" style="display:inline-block;">Изменить</a>
+          <form method="post" action="{{ url_for('admin.promocode_delete', promo_id=p.id) }}" style="display: inline-block;" onsubmit="return confirm('Удалить промокод {{ p.code }}?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+            <button class="btn btn-danger btn-sm" type="submit">Удалить</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="7" style="text-align: center; color: var(--color-text-muted); padding: var(--space-8);">Промокодов пока нет. Создайте первый.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

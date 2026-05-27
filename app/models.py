@@ -166,10 +166,17 @@ class Order(db.Model):
     payment_method = db.Column(db.String(40), default="cash")  # cash / sbp (картой онлайн отключена)
     comment = db.Column(db.Text, default="")
     total = db.Column(db.Numeric(10, 2), nullable=False)
+    discount = db.Column(db.Numeric(10, 2), default=0)
+    promo_code = db.Column(db.String(64))
     status = db.Column(db.String(40), default="new")  # new / paid / shipped / done / canceled
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     items = db.relationship("OrderItem", backref="order", lazy="joined", cascade="all, delete-orphan")
+
+    @property
+    def subtotal(self):
+        """Сумма до скидки."""
+        return float(self.total) + float(self.discount or 0)
 
 
 class OrderItem(db.Model):
@@ -242,6 +249,41 @@ class Promotion(db.Model):
 
     def body(self, lang="ru"):
         return self.body_en if lang == "en" else self.body_ru
+
+
+class PromoCode(db.Model):
+    """Промокод с фиксированной (₽) или процентной скидкой."""
+    __tablename__ = "promo_codes"
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(64), unique=True, nullable=False, index=True)
+    discount_type = db.Column(db.String(16), default="percent")  # 'percent' | 'fixed'
+    discount_value = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    min_order = db.Column(db.Numeric(10, 2), default=0)
+    usage_limit = db.Column(db.Integer, default=0)  # 0 = без лимита
+    used_count = db.Column(db.Integer, default=0)
+    valid_until = db.Column(db.Date)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def is_valid(self, order_total: float) -> tuple[bool, str]:
+        """Проверяет валидность промокода для заказа. Возвращает (ok, причина-ключ)."""
+        if not self.is_active:
+            return False, "promo_inactive"
+        if self.valid_until and self.valid_until < date.today():
+            return False, "promo_expired"
+        if self.usage_limit and self.used_count >= self.usage_limit:
+            return False, "promo_exhausted"
+        if self.min_order and float(order_total) < float(self.min_order):
+            return False, "promo_min_order"
+        return True, "ok"
+
+    def calc_discount(self, order_total: float) -> float:
+        """Считает размер скидки в ₽ (не больше суммы заказа)."""
+        if self.discount_type == "percent":
+            d = float(order_total) * float(self.discount_value) / 100.0
+        else:
+            d = float(self.discount_value)
+        return min(round(d, 2), float(order_total))
 
 
 class CartItem(db.Model):
