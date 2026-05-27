@@ -19,12 +19,12 @@
         <span class="reviews-count">({{ p.reviews_count }})</span>
       </div>
       <div class="card-meta">
-        <div>
-          {% if p.old_price %}<span class="old-price">{{ "{:,.0f}".format(p.old_price).replace(',', ' ') }} ₽</span>{% endif %}
-          <span class="price">{{ "{:,.0f}".format(p.price).replace(',', ' ') }} ₽</span>
+        <div class="card-price-row">
+          {% if p.old_price %}<span class="old-price">{{ "{:,.0f}".format(p.old_price).replace(',', ' ') }} ₽</span>{% endif %}
+          <span class="price">{{ "{:,.0f}".format(p.price).replace(',', ' ') }} ₽</span>
         </div>
         <span class="stock-badge {% if not p.in_stock %}out{% endif %}">
-          {% if p.in_stock %}{{ '★' if lang=='en' else '' }} {{ ('In stock' if lang=='en' else 'В наличии') }}{% else %}{{ ('Out' if lang=='en' else 'Нет') }}{% endif %}
+          {% if p.in_stock %}{{ ('In stock' if lang=='en' else 'В наличии') }}{% else %}{{ ('Out of stock' if lang=='en' else 'Нет в наличии') }}{% endif %}
         </span>
       </div>
     </div>

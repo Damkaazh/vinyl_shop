@@ -279,7 +279,8 @@ const L = {
 
   function fmtPrice(v) {
     if (v == null) return '';
-    return Math.round(v).toLocaleString('ru-RU').replace(/,/g, ' ') + ' ₽';
+    // Неразрывные пробелы (U+00A0), чтобы «4 990 ₽» не ломалось
+    return Math.round(v).toLocaleString('ru-RU').replace(/[\s,]/g, '\u00a0') + '\u00a0₽';
   }
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
@@ -305,16 +306,16 @@ const L = {
   }
   function render(p) {
     const oldPrice = p.old_price
-      ? '<span class="quick-old-price">' + esc(fmtPrice(p.old_price)) + '</span>' : '';
-    const stockBadge = '<span class="badge ' + (p.in_stock ? 'success' : 'error') + '">'
+      ? '<span class="quick-old-price">' + fmtPrice(p.old_price) + '</span>' : '';
+    const stockBadge = '<span class="quick-stock-badge ' + (p.in_stock ? 'is-in' : 'is-out') + '">'
       + esc(p.in_stock ? i18n.in_stock : i18n.out_of_stock) + '</span>';
     const audioBlock = p.has_audio && p.audio_url ? buildAudio(p.audio_url) : '';
-    const description = p.short || p.description || '';
+    const description = p.description || p.short || '';
 
-    let actions = '';
+    let cartBlock = '';
     if (window.VH_AUTH) {
       const disabled = p.in_stock ? '' : 'disabled';
-      actions = (
+      cartBlock = (
         '<form class="quick-add-form" data-quick-add data-add-url="' + esc(p.add_url) + '">' +
           '<input type="hidden" name="csrf_token" value="' + esc(csrf) + '">' +
           '<div class="qty-control">' +
@@ -322,7 +323,7 @@ const L = {
             '<input type="number" name="quantity" value="1" min="1" max="' + (p.stock || 99) + '">' +
             '<button type="button" data-qty-inc aria-label="+">+</button>' +
           '</div>' +
-          '<button type="submit" class="btn btn-primary" ' + disabled + '>' +
+          '<button type="submit" class="btn btn-primary quick-btn-cart" ' + disabled + '>' +
             '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
               '<path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/>' +
             '</svg> ' + esc(i18n.add_to_cart) +
@@ -330,7 +331,7 @@ const L = {
         '</form>'
       );
     } else {
-      actions = '<a href="' + esc(window.VH_LOGIN_URL || '/auth/login') + '" class="btn btn-primary">'
+      cartBlock = '<a href="' + esc(window.VH_LOGIN_URL || '/auth/login') + '" class="btn btn-primary quick-btn-cart">'
         + esc(i18n.login) + ' → ' + esc(i18n.add_to_cart) + '</a>';
     }
 
@@ -338,17 +339,21 @@ const L = {
       '<div class="quick-grid">' +
         '<div class="quick-image"><img src="' + esc(p.image_url) + '" alt="' + esc(p.name) + '"></div>' +
         '<div class="quick-info">' +
-          '<div class="section-eyebrow">' + esc(p.category) + '</div>' +
-          '<h2 id="quick-title">' + esc(p.name) + '</h2>' +
-          '<div class="quick-meta">' + stockBadge + '</div>' +
+          '<div class="quick-eyebrow">' + esc(p.category) + '</div>' +
+          '<h2 id="quick-title" class="quick-title">' + esc(p.name) + '</h2>' +
           '<div class="quick-price-row">' +
-            oldPrice +
-            '<span class="quick-price">' + esc(fmtPrice(p.price)) + '</span>' +
+            '<div class="quick-prices">' +
+              oldPrice +
+              '<span class="quick-price">' + fmtPrice(p.price) + '</span>' +
+            '</div>' +
+            stockBadge +
           '</div>' +
           (description ? '<p class="quick-desc">' + esc(description) + '</p>' : '') +
           audioBlock +
-          '<div class="quick-actions">' + actions + '</div>' +
-          '<a href="' + esc(p.detail_url) + '" class="quick-detail-link">' + esc(i18n.open_full_page) + ' →</a>' +
+          '<div class="quick-actions">' +
+            cartBlock +
+            '<a href="' + esc(p.detail_url) + '" class="btn btn-outline quick-btn-detail">' + esc(i18n.open_full_page) + '</a>' +
+          '</div>' +
         '</div>' +
       '</div>'
     );
