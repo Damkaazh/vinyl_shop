@@ -16,6 +16,7 @@
 """
 from datetime import datetime, date
 from flask_login import UserMixin
+from sqlalchemy import orm
 from werkzeug.security import generate_password_hash, check_password_hash
 from .extensions import db, login_manager
 
@@ -98,14 +99,18 @@ class Product(db.Model):
     stock = db.Column(db.Integer, default=0)
     image = db.Column(db.String(255), default="placeholder.svg")
     is_featured = db.Column(db.Boolean, default=False)  # для слайдера
-    audio_data = db.Column(db.LargeBinary, nullable=True)  # аудио-превью для пластинки (BYTEA в PostgreSQL)
+    # Аудио-превью. Критично: deferred — блоб не грузится при обычном SELECT,
+    # только при явном обращении к product.audio_data. Без этого любой листинг каталога тянет в RAM
+    # все аудиофайлы → OOM на Render free (512 МБ).
+    audio_data = orm.deferred(db.Column(db.LargeBinary, nullable=True))
     audio_mime = db.Column(db.String(64), nullable=True)   # например audio/mpeg, audio/ogg
     audio_name = db.Column(db.String(255), nullable=True)  # исходное имя файла
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     @property
     def has_audio(self):
-        return bool(self.audio_data)
+        # Не дёргаем блоб — смотрим по лёгким колонкам. audio_name всегда заполняется вместе с audio_data.
+        return bool(self.audio_name) or bool(self.audio_mime)
 
     images = db.relationship("ProductImage", backref="product", lazy="dynamic", cascade="all, delete-orphan")
     reviews = db.relationship("Review", backref="product", lazy="dynamic", cascade="all, delete-orphan")
