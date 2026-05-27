@@ -351,9 +351,9 @@ const L = {
           (description ? '<p class="quick-desc">' + esc(description) + '</p>' : '') +
           audioBlock +
           '<div class="quick-actions">' +
-  cartBlock +
-  '<a href="' + esc(p.detail_url) + '" class="btn btn-outline quick-btn-detail">' + esc(i18n.open_full_page) + '</a>' +
-'</div>' +
+            cartBlock +
+            '<a href="' + esc(p.detail_url) + '" class="btn btn-outline quick-btn-detail">' + esc(i18n.open_full_page) + '</a>' +
+          '</div>' +
         '</div>' +
       '</div>'
     );
