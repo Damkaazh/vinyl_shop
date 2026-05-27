@@ -156,6 +156,31 @@
   </div>
 </div>
 
+<!-- Модал быстрого просмотра товара -->
+<div class="modal-overlay quick-modal" data-quick-modal hidden role="dialog" aria-modal="true" aria-labelledby="quick-title">
+  <div class="modal-card modal-card--wide">
+    <button class="modal-close" data-quick-close aria-label="{{ t.close }}">×</button>
+    <div class="quick-body" data-quick-body>
+      <div class="quick-loading">{{ t.loading }}</div>
+    </div>
+  </div>
+</div>
+<input type="hidden" id="csrf_token_global" value="{{ csrf_token() if csrf_token else '' }}">
+<script>
+  window.VH_I18N = Object.assign(window.VH_I18N || {}, {
+    add_to_cart:     {{ t.add_to_cart|tojson }},
+    open_full_page:  {{ t.open_full_page|tojson }},
+    in_stock:        {{ t.in_stock|tojson }},
+    out_of_stock:    {{ t.out_of_stock|tojson }},
+    listen_sample:   {{ t.listen_sample|tojson }},
+    sample_sub:      {{ t.sample_sub|tojson }},
+    login:           {{ t.login|tojson }},
+    added_to_cart:   {{ t.added_to_cart|tojson }},
+  });
+  window.VH_AUTH = {{ ('true' if current_user.is_authenticated else 'false')|safe }};
+  window.VH_LOGIN_URL = {{ url_for('auth.login')|tojson }};
+</script>
+
 <!-- Декоративные вращающиеся пластинки на фоне -->
 <div class="vinyl-bg" aria-hidden="true">
   <span class="vinyl-bg__disc vinyl-bg__disc--1"></span>

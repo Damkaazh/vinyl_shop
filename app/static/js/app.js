@@ -267,3 +267,183 @@ const L = {
   overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !overlay.hidden) close(); });
 })();
+
+/* ===== Быстрый просмотр товара (модал с AJAX) ===== */
+(() => {
+  const overlay = document.querySelector('[data-quick-modal]');
+  if (!overlay) return;
+  const body = overlay.querySelector('[data-quick-body]');
+  const closeBtn = overlay.querySelector('[data-quick-close]');
+  const i18n = window.VH_I18N || {};
+  const csrf = (document.getElementById('csrf_token_global') || {}).value || '';
+
+  function fmtPrice(v) {
+    if (v == null) return '';
+    return Math.round(v).toLocaleString('ru-RU').replace(/,/g, ' ') + ' ₽';
+  }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+  function showLoading() {
+    body.innerHTML = '<div class="quick-loading">' + esc(i18n.loading || '…') + '</div>';
+  }
+  function buildAudio(url) {
+    return (
+      '<div class="audio-preview">' +
+        '<div class="audio-preview__head">' +
+          '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">' +
+            '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 3a9 9 0 0 1 9 9"/>' +
+          '</svg>' +
+          '<div><div class="audio-preview__title">' + esc(i18n.listen_sample) + '</div>' +
+          '<div class="audio-preview__sub">' + esc(i18n.sample_sub) + '</div></div>' +
+        '</div>' +
+        '<audio controls preload="none" src="' + esc(url) + '"></audio>' +
+      '</div>'
+    );
+  }
+  function render(p) {
+    const oldPrice = p.old_price
+      ? '<span class="quick-old-price">' + esc(fmtPrice(p.old_price)) + '</span>' : '';
+    const stockBadge = '<span class="badge ' + (p.in_stock ? 'success' : 'error') + '">'
+      + esc(p.in_stock ? i18n.in_stock : i18n.out_of_stock) + '</span>';
+    const audioBlock = p.has_audio && p.audio_url ? buildAudio(p.audio_url) : '';
+    const description = p.short || p.description || '';
+
+    let actions = '';
+    if (window.VH_AUTH) {
+      const disabled = p.in_stock ? '' : 'disabled';
+      actions = (
+        '<form class="quick-add-form" data-quick-add data-add-url="' + esc(p.add_url) + '">' +
+          '<input type="hidden" name="csrf_token" value="' + esc(csrf) + '">' +
+          '<div class="qty-control">' +
+            '<button type="button" data-qty-dec aria-label="−">−</button>' +
+            '<input type="number" name="quantity" value="1" min="1" max="' + (p.stock || 99) + '">' +
+            '<button type="button" data-qty-inc aria-label="+">+</button>' +
+          '</div>' +
+          '<button type="submit" class="btn btn-primary" ' + disabled + '>' +
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' +
+              '<path d="M6 6h15l-1.5 9h-12z"/><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/>' +
+            '</svg> ' + esc(i18n.add_to_cart) +
+          '</button>' +
+        '</form>'
+      );
+    } else {
+      actions = '<a href="' + esc(window.VH_LOGIN_URL || '/auth/login') + '" class="btn btn-primary">'
+        + esc(i18n.login) + ' → ' + esc(i18n.add_to_cart) + '</a>';
+    }
+
+    body.innerHTML = (
+      '<div class="quick-grid">' +
+        '<div class="quick-image"><img src="' + esc(p.image_url) + '" alt="' + esc(p.name) + '"></div>' +
+        '<div class="quick-info">' +
+          '<div class="section-eyebrow">' + esc(p.category) + '</div>' +
+          '<h2 id="quick-title">' + esc(p.name) + '</h2>' +
+          '<div class="quick-meta">' + stockBadge + '</div>' +
+          '<div class="quick-price-row">' +
+            oldPrice +
+            '<span class="quick-price">' + esc(fmtPrice(p.price)) + '</span>' +
+          '</div>' +
+          (description ? '<p class="quick-desc">' + esc(description) + '</p>' : '') +
+          audioBlock +
+          '<div class="quick-actions">' + actions + '</div>' +
+          '<a href="' + esc(p.detail_url) + '" class="quick-detail-link">' + esc(i18n.open_full_page) + ' →</a>' +
+        '</div>' +
+      '</div>'
+    );
+
+    // qty buttons
+    const dec = body.querySelector('[data-qty-dec]');
+    const inc = body.querySelector('[data-qty-inc]');
+    const qty = body.querySelector('input[name="quantity"]');
+    if (dec && qty) dec.addEventListener('click', () => qty.stepDown());
+    if (inc && qty) inc.addEventListener('click', () => qty.stepUp());
+
+    // ajax add to cart
+    const addForm = body.querySelector('[data-quick-add]');
+    if (addForm) {
+      addForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const url = addForm.dataset.addUrl;
+        const fd = new FormData(addForm);
+        try {
+          const res = await fetch(url, {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+          });
+          const data = await res.json().catch(() => ({}));
+          if (data && data.ok) {
+            // обновим счётчик корзины
+            const badge = document.querySelector('.cart-btn .badge');
+            if (badge) badge.textContent = data.count;
+            else {
+              const cartBtn = document.querySelector('.cart-btn');
+              if (cartBtn) {
+                const b = document.createElement('span');
+                b.className = 'badge'; b.textContent = data.count;
+                cartBtn.appendChild(b);
+              }
+            }
+            // показать тост и закрыть
+            showToast(i18n.added_to_cart || 'OK');
+            setTimeout(close, 400);
+          } else {
+            showToast('×', 'error');
+          }
+        } catch (err) {
+          showToast('×', 'error');
+        }
+      });
+    }
+  }
+  function showToast(msg, type) {
+    const t = document.createElement('div');
+    t.className = 'flash ' + (type === 'error' ? 'error' : 'success');
+    t.textContent = msg;
+    let stack = document.querySelector('.flash-stack');
+    if (!stack) {
+      stack = document.createElement('div');
+      stack.className = 'flash-stack';
+      document.body.appendChild(stack);
+    }
+    stack.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2200);
+  }
+  async function open(id) {
+    showLoading();
+    overlay.hidden = false;
+    requestAnimationFrame(() => overlay.classList.add('is-open'));
+    document.body.style.overflow = 'hidden';
+    try {
+      const res = await fetch('/api/product/' + encodeURIComponent(id), {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin',
+      });
+      if (!res.ok) throw new Error('http ' + res.status);
+      const data = await res.json();
+      render(data);
+    } catch (err) {
+      body.innerHTML = '<p style="padding:24px;color:var(--color-text-muted);">×</p>';
+    }
+  }
+  function close() {
+    overlay.classList.remove('is-open');
+    document.body.style.overflow = '';
+    // стопим аудио, если играет
+    const audio = body.querySelector('audio');
+    if (audio) try { audio.pause(); } catch (_) {}
+    setTimeout(() => { overlay.hidden = true; body.innerHTML = ''; }, 220);
+  }
+  document.addEventListener('click', (e) => {
+    const link = e.target.closest('[data-quick]');
+    if (!link) return;
+    e.preventDefault();
+    open(link.dataset.quick);
+  });
+  if (closeBtn) closeBtn.addEventListener('click', close);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !overlay.hidden) close(); });
+})();

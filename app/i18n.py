@@ -121,6 +121,11 @@ TRANSLATIONS = {
         "vk": "ВКонтакте",
         "max": "МАКС",
         "phone_mask_hint": "+7 (___) ___-__-__",
+        "quick_view": "Быстрый просмотр",
+        "open_full_page": "На полную страницу",
+        "loading": "Загружаем…",
+        "listen_sample": "Послушать отрывок",
+        "sample_sub": "демо-фрагмент пластинки, 15–25 секунд",
     },
     "en": {
         "site_name": "Vinyl Harbour",
@@ -241,6 +246,11 @@ TRANSLATIONS = {
         "vk": "VKontakte",
         "max": "MAX",
         "phone_mask_hint": "+7 (___) ___-__-__",
+        "quick_view": "Quick view",
+        "open_full_page": "Open full page",
+        "loading": "Loading…",
+        "listen_sample": "Listen to a sample",
+        "sample_sub": "15–25 second preview from the record",
     },
 }
 
