@@ -1,12 +1,16 @@
 {# === Макрос карточки товара === #}
 {% macro product_card(p, lang='ru') %}
-  <article class="product-card">
-    <a href="{{ url_for('catalog.detail', product_id=p.id) }}" class="card-image" style="display:block;">
+  <article class="product-card" data-product-id="{{ p.id }}">
+    <a href="{{ url_for('catalog.detail', product_id=p.id) }}" class="card-image" data-quick="{{ p.id }}" style="display:block;">
       <img src="{{ url_for('static', filename='img/' + p.image) }}" alt="{{ p.name(lang) }}" loading="lazy">
+      <span class="card-quick-hint" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M11 8v6M8 11h6"/></svg>
+        {% if lang=='en' %}Quick view{% else %}Быстрый просмотр{% endif %}
+      </span>
     </a>
     <div class="card-body">
       <span class="card-cat">{{ p.category.name(lang) }}</span>
-      <h3><a href="{{ url_for('catalog.detail', product_id=p.id) }}">{{ p.name(lang) }}</a></h3>
+      <h3><a href="{{ url_for('catalog.detail', product_id=p.id) }}" data-quick="{{ p.id }}">{{ p.name(lang) }}</a></h3>
       <div class="rating" aria-label="Рейтинг {{ p.avg_rating }}">
         {% set rating = p.avg_rating|round|int %}
         {% for i in range(5) %}
@@ -15,12 +19,12 @@
         <span class="reviews-count">({{ p.reviews_count }})</span>
       </div>
       <div class="card-meta">
-        <div>
-          {% if p.old_price %}<span class="old-price">{{ "{:,.0f}".format(p.old_price).replace(',', ' ') }} ₽</span>{% endif %}
-          <span class="price">{{ "{:,.0f}".format(p.price).replace(',', ' ') }} ₽</span>
+        <div class="card-price-row">
+          {% if p.old_price %}<span class="old-price">{{ "{:,.0f}".format(p.old_price).replace(',', ' ') }} ₽</span>{% endif %}
+          <span class="price">{{ "{:,.0f}".format(p.price).replace(',', ' ') }} ₽</span>
         </div>
         <span class="stock-badge {% if not p.in_stock %}out{% endif %}">
-          {% if p.in_stock %}{{ '★' if lang=='en' else '' }} {{ ('In stock' if lang=='en' else 'В наличии') }}{% else %}{{ ('Out' if lang=='en' else 'Нет') }}{% endif %}
+          {% if p.in_stock %}{{ ('In stock' if lang=='en' else 'В наличии') }}{% else %}{{ ('Out of stock' if lang=='en' else 'Нет в наличии') }}{% endif %}
         </span>
       </div>
     </div>

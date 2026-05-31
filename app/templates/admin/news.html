@@ -11,11 +11,11 @@
       {% for n in items %}
       <tr>
         <td><strong>{{ n.title_ru }}</strong><br><small style="color: var(--color-text-muted);">{{ n.title_en }}</small></td>
-        <td>{{ n.published_at.strftime('%d.%m.%Y') }}</td>
+        <td style="white-space: nowrap;">{{ n.published_at.strftime('%d.%m.%Y') }}</td>
         <td>{% if n.is_featured %}<span class="badge accent">★</span>{% endif %}</td>
-        <td>
+        <td class="cell-actions" style="white-space: nowrap;">
           <a href="{{ url_for('admin.news_edit', news_id=n.id) }}" class="btn btn-outline btn-sm">Изм.</a>
-          <form method="post" action="{{ url_for('admin.news_delete', news_id=n.id) }}" style="display: inline;" onsubmit="return confirm('Удалить?');">
+          <form method="post" action="{{ url_for('admin.news_delete', news_id=n.id) }}" style="display: inline-block;" onsubmit="return confirm('Удалить?');">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
             <button class="btn btn-danger btn-sm" type="submit">Удалить</button>
           </form>
