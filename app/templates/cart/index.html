@@ -12,66 +12,24 @@
     <div style="display: grid; grid-template-columns: 1fr 360px; gap: var(--space-8);">
       <div class="cart-list">
         {% for ci in items %}
-        {% set image_url = url_for('api.product_image', product_id=ci.product.id) if ci.product.image == 'db'
-          else url_for('static', filename='img/' + ci.product.image) %}
         <div class="cart-item">
-          <a href="{{ url_for('catalog.detail', product_id=ci.product.id) }}" class="img">
-            <img src="{{ image_url }}" alt="{{ ci.product.name(lang) }}" loading="lazy">
-          </a>
-
+          <a href="{{ url_for('catalog.detail', product_id=ci.product.id) }}" class="img"><img src="{{ url_for('static', filename='img/' + ci.product.image) }}" alt=""></a>
           <div class="info">
-            <div class="card-cat" style="font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); letter-spacing: .12em; text-transform: uppercase;">
-              {{ ci.product.category.name(lang) }}
-            </div>
-
-            <h3 style="font-family: var(--font-display); margin-top: 4px;">
-              <a href="{{ url_for('catalog.detail', product_id=ci.product.id) }}">{{ ci.product.name(lang) }}</a>
-            </h3>
-
-            {% if ci.product.short(lang) %}
-            <div style="margin-top: 6px; color: var(--color-text-muted); font-size: var(--text-sm);">
-              {{ ci.product.short(lang) }}
-            </div>
-            {% endif %}
-
-            <div style="display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; margin-top: 8px;">
-              <div style="font-family: var(--font-mono); color: var(--color-primary);">
-                {{ "{:,.0f}".format(ci.product.price).replace(',', ' ') }} ₽
-              </div>
-
-              {% if ci.product.oldprice %}
-              <div style="font-family: var(--font-mono); color: var(--color-text-muted); text-decoration: line-through;">
-                {{ "{:,.0f}".format(ci.product.oldprice).replace(',', ' ') }} ₽
-              </div>
-              {% endif %}
-
-              <span class="stock-badge {% if not ci.product.instock %}out{% endif %}">
-                {% if ci.product.instock %}
-                  {% if lang=='en' %}In stock{% else %}В наличии{% endif %}
-                {% else %}
-                  {% if lang=='en' %}Out of stock{% else %}Нет в наличии{% endif %}
-                {% endif %}
-              </span>
-            </div>
+            <div class="card-cat" style="font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); letter-spacing: .12em; text-transform: uppercase;">{{ ci.product.category.name(lang) }}</div>
+            <h3 style="font-family: var(--font-display); margin-top: 4px;"><a href="{{ url_for('catalog.detail', product_id=ci.product.id) }}">{{ ci.product.name(lang) }}</a></h3>
+            <div style="font-family: var(--font-mono); color: var(--color-primary); margin-top: 6px;">{{ "{:,.0f}".format(ci.product.price).replace(',', ' ') }} ₽</div>
           </div>
-
           <form method="post" action="{{ url_for('cart.update', item_id=ci.id) }}" class="qty-control">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
             <button type="button" onclick="this.nextElementSibling.stepDown(); this.closest('form').submit();">−</button>
-            <input type="number" name="quantity" value="{{ ci.quantity }}" min="1" max="{{ ci.product.stock or 1 }}">
+            <input type="number" name="quantity" value="{{ ci.quantity }}" min="1" max="{{ ci.product.stock }}">
             <button type="button" onclick="this.previousElementSibling.stepUp(); this.closest('form').submit();">+</button>
           </form>
-
-          <div style="font-family: var(--font-mono); font-weight: 600; font-size: var(--text-base);">
-            {{ "{:,.0f}".format(ci.subtotal).replace(',', ' ') }} ₽
-          </div>
-
+          <div style="font-family: var(--font-mono); font-weight: 600; font-size: var(--text-base);">{{ "{:,.0f}".format(ci.subtotal).replace(',', ' ') }} ₽</div>
           <form method="post" action="{{ url_for('cart.remove', item_id=ci.id) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
             <button type="submit" class="icon-btn" aria-label="{{ t.remove }}" title="{{ t.remove }}">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/>
-              </svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
             </button>
           </form>
         </div>
@@ -82,36 +40,7 @@
         <h3>{% if lang=='en' %}Summary{% else %}Итог{% endif %}</h3>
         <div class="row"><span>{% if lang=='en' %}Items{% else %}Товаров{% endif %}</span><span>{{ items|length }}</span></div>
         <div class="row"><span>{% if lang=='en' %}Delivery{% else %}Доставка{% endif %}</span><span style="color: var(--color-success);">{% if lang=='en' %}calculated next{% else %}рассчитается далее{% endif %}</span></div>
-
-        <div class="promo-box" style="margin: var(--space-4) 0; padding: var(--space-4); background: var(--color-surface-offset); border-radius: var(--radius-md);">
-          {% if promo %}
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-3);">
-              <div>
-                <div style="font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); letter-spacing: .12em; text-transform: uppercase;">
-                  {% if lang=='en' %}Promo applied{% else %}Промокод активен{% endif %}
-                </div>
-                <div style="font-family: var(--font-mono); font-weight: 600; color: var(--color-success);">{{ promo.code }}</div>
-              </div>
-              <form method="post" action="{{ url_for('cart.promo_clear') }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
-                <button type="submit" class="btn btn-ghost btn-sm">{% if lang=='en' %}Remove{% else %}Убрать{% endif %}</button>
-              </form>
-            </div>
-          {% else %}
-            <form method="post" action="{{ url_for('cart.promo_apply') }}" style="display: flex; gap: var(--space-2);">
-              {{ promo_form.hidden_tag() }}
-              {{ promo_form.code(class_='input', placeholder=('Promo code' if lang=='en' else 'Промокод'), style='flex: 1; text-transform: uppercase;') }}
-              <button type="submit" class="btn btn-outline btn-sm">{% if lang=='en' %}Apply{% else %}Применить{% endif %}</button>
-            </form>
-          {% endif %}
-        </div>
-
-        {% if discount and discount > 0 %}
-          <div class="row"><span>{% if lang=='en' %}Subtotal{% else %}Подытог{% endif %}</span><span style="font-family: var(--font-mono);">{{ "{:,.0f}".format(subtotal).replace(',', ' ') }} ₽</span></div>
-          <div class="row"><span style="color: var(--color-success);">{% if lang=='en' %}Discount{% else %}Скидка{% endif %}</span><span style="font-family: var(--font-mono); color: var(--color-success);">−{{ "{:,.0f}".format(discount).replace(',', ' ') }} ₽</span></div>
-        {% endif %}
-
-        <div class="row total"><span>{{ t.total }}</span><span style="font-family: var(--font-mono); color: var(--color-primary);">{{ "{:,.0f}".format(total).replace(',', ' ') }} ₽</span></div>
+        <div class="row total"><span>{{ t.total }}</span><span style="font-family: var(--font-mono); color: var(--color-primary);">{{ "{:,.0f}".format(total).replace(',', ' ') }} ₽</span></div>
         <a href="{{ url_for('cart.checkout') }}" class="btn btn-primary btn-block" style="margin-top: var(--space-4);">{{ t.checkout }} →</a>
 
         <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-divider);">

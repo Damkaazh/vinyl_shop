@@ -8,10 +8,7 @@
 
 Состав заказа:
 {% for item in order.items %}- {{ item.name }} × {{ item.quantity }} = {{ "{:,.0f}".format(item.subtotal).replace(',', ' ') }} ₽
-{% endfor %}{% if order.discount and order.discount|float > 0 %}
-Подытог: {{ "{:,.0f}".format(order.subtotal).replace(',', ' ') }} ₽
-Скидка{% if order.promo_code %} ({{ order.promo_code }}){% endif %}: −{{ "{:,.0f}".format(order.discount|float).replace(',', ' ') }} ₽
-{% endif %}
+{% endfor %}
 
 Способ получения: {{ order.delivery_method }}
 Способ оплаты: {{ order.payment_method }}

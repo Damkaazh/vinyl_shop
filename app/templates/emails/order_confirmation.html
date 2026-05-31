@@ -16,10 +16,6 @@
       <td align="right" style="padding: 10px; font-family: monospace;">{{ "{:,.0f}".format(item.subtotal).replace(',', ' ') }} ₽</td>
     </tr>
     {% endfor %}
-    {% if order.discount and order.discount|float > 0 %}
-    <tr><td colspan="2" style="padding: 8px 10px; color: #7a5a3c;">Подытог</td><td align="right" style="padding: 8px 10px; font-family: monospace; color: #7a5a3c;">{{ "{:,.0f}".format(order.subtotal).replace(',', ' ') }} ₽</td></tr>
-    <tr><td colspan="2" style="padding: 8px 10px; color: #2f7a3c;">Скидка{% if order.promo_code %} ({{ order.promo_code }}){% endif %}</td><td align="right" style="padding: 8px 10px; font-family: monospace; color: #2f7a3c;">−{{ "{:,.0f}".format(order.discount|float).replace(',', ' ') }} ₽</td></tr>
-    {% endif %}
     <tr><td colspan="2" style="padding: 16px 10px; font-weight: bold;">Итого</td><td align="right" style="padding: 16px 10px; color: #7a1f1f; font-size: 18px; font-weight: bold;">{{ "{:,.0f}".format(order.total).replace(',', ' ') }} ₽</td></tr>
     </tbody>
   </table>

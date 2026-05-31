@@ -1,7 +1,6 @@
 """Утилиты: загрузка файлов, отправка писем, декораторы."""
+import os
 import secrets
-import threading
-from datetime import datetime
 from functools import wraps
 from pathlib import Path
 from flask import current_app, abort, render_template
@@ -19,7 +18,11 @@ def allowed_file(filename):
 
 
 def save_upload(file_storage, subdir=""):
-    """Сохраняет файл с уникальным именем, возвращает имя файла."""
+    """Сохраняет файл с уникальным именем, возвращает имя файла.
+
+    Безопасно обрабатывает случаи, когда вместо FileStorage приходит строка
+    (так бывает, когда FlaskForm(obj=...) подставляет в FileField текущее имя файла из МОДЕЛИ).
+    """
     filename = getattr(file_storage, "filename", None)
     if not file_storage or not filename or not hasattr(file_storage, "save"):
         return None
@@ -44,55 +47,36 @@ def admin_required(f):
     return decorated
 
 
-def _send_email(recipient: str, subject: str, text_body: str, html_body: str | None = None) -> bool:
-    """Универсальная отправка письма в фоновом потоке."""
+def send_order_email(order):
+    """Отправляет покупателю письмо с подтверждением заказа.
+
+    Если SMTP не настроен — пишет письмо в файл /instance/emails.log,
+    чтобы можно было показать функционал на защите ВКР.
+    """
+    subject = f"Заказ №{order.id} в магазине «Виниловая Гавань»"
+    html = render_template("emails/order_confirmation.html", order=order)
+    text = render_template("emails/order_confirmation.txt", order=order)
+
+    sender = current_app.config.get("MAIL_DEFAULT_SENDER")
     suppress = current_app.config.get("MAIL_SUPPRESS_SEND")
     smtp_user = current_app.config.get("MAIL_USERNAME")
 
     if suppress or not smtp_user:
-        current_app.logger.info(f"MAIL SUPPRESSED TO: {recipient} | {subject}")
+        # Имитация — записываем в лог
+        log_path = Path(current_app.instance_path) / "emails.log"
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(f"\n=== TO: {order.email} | SUBJECT: {subject} ===\n{text}\n")
         return False
 
-    sender = current_app.config.get("MAIL_DEFAULT_SENDER")
-    msg = Message(subject=subject, recipients=[recipient], sender=sender)
-    msg.body = text_body
-    if html_body:
-        msg.html = html_body
-
-    app = current_app._get_current_object()
-
-    def _send():
-        with app.app_context():
-            try:
-                mail.send(msg)
-                app.logger.info(f"MAIL SENT OK TO: {recipient}")
-            except Exception as e:
-                app.logger.error(f"MAIL FAILED TO: {recipient} | {e}")
-
-    threading.Thread(target=_send, daemon=True).start()
-    return True
-
-
-def send_order_email(order):
-    """Письмо-подтверждение заказа."""
-    subject = f"Заказ №{order.id} в магазине «Виниловая Гавань»"
-    html = render_template("emails/order_confirmation.html", order=order)
-    text = render_template("emails/order_confirmation.txt", order=order)
-    return _send_email(order.email, subject, text, html)
-
-
-def send_welcome_email(user):
-    """Приветственное письмо после регистрации."""
-    subject = "Добро пожаловать в «Виниловую Гавань»"
-    html = render_template("emails/welcome.html", user=user)
-    text = render_template("emails/welcome.txt", user=user)
-    return _send_email(user.email, subject, text, html)
-
-
-def send_login_notification(user, ip: str = "", user_agent: str = ""):
-    """Уведомление о входе в аккаунт."""
-    subject = "Вход в аккаунт «Виниловая Гавань»"
-    now_str = datetime.now().strftime("%d.%m.%Y %H:%M")
-    html = render_template("emails/login_alert.html", user=user, ip=ip, user_agent=user_agent, now_str=now_str)
-    text = render_template("emails/login_alert.txt", user=user, ip=ip, user_agent=user_agent, now_str=now_str)
-    return _send_email(user.email, subject, text, html)
+    msg = Message(subject=subject, recipients=[order.email], sender=sender)
+    msg.body = text
+    msg.html = html
+    try:
+        mail.send(msg)
+        return True
+    except Exception as e:
+        current_app.logger.error(f"Mail send failed: {e}")
+        log_path = Path(current_app.instance_path) / "emails.log"
+        with open(log_path, "a", encoding="utf-8") as f:
+            f.write(f"\n=== FAILED TO: {order.email} | {e} ===\n{text}\n")
+        return False
