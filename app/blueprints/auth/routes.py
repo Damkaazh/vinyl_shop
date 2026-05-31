@@ -1,4 +1,4 @@
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, logout_user, current_user, login_required
 from sqlalchemy import or_
 from . import bp
@@ -14,7 +14,6 @@ def register():
         return redirect(url_for("main.index"))
     form = RegistrationForm()
     if form.validate_on_submit():
-        # Проверка уникальности
         existing = User.query.filter(or_(
             User.email == form.email.data,
             User.login == form.login.data,
@@ -47,8 +46,8 @@ def register():
         _record_session(user)
         try:
             send_welcome_email(user)
-        except Exception:
-            pass  # письмо не должно ломать регистрацию
+        except Exception as e:
+            current_app.logger.error(f"send_welcome_email failed: {e}")
         flash("Регистрация прошла успешно. Добро пожаловать!", "success")
         return redirect(url_for("account.index"))
     return render_template("auth/register.html", form=form)
@@ -73,8 +72,8 @@ def login():
                 ip=request.headers.get("X-Forwarded-For", request.remote_addr or ""),
                 user_agent=request.user_agent.string if request.user_agent else "",
             )
-        except Exception:
-            pass  # письмо не должно ломать вход
+        except Exception as e:
+            current_app.logger.error(f"send_login_notification failed: {e}")
         flash("Вход выполнен.", "success")
         next_url = request.args.get("next") or url_for("account.index")
         return redirect(next_url)
@@ -93,7 +92,6 @@ def logout():
 def forgot():
     form = ForgotPasswordForm()
     if form.validate_on_submit():
-        # Демо: показываем сообщение об отправке (учебный проект)
         flash("Если такой e-mail зарегистрирован, мы отправили на него письмо для восстановления.", "info")
         return redirect(url_for("auth.login"))
     return render_template("auth/forgot.html", form=form)

@@ -95,7 +95,8 @@
 <footer class="site-footer" id="contacts">
   <div class="container">
     <div class="footer-grid">
-      <div>
+
+      <div class="footer-brand">
         <a href="{{ url_for('main.index') }}" class="logo">
           <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
             <circle cx="16" cy="16" r="15" stroke="currentColor" stroke-width="1.5"/>
@@ -103,13 +104,7 @@
           </svg>
           <span>{{ t.site_name }}</span>
         </a>
-        <p style="margin-top: 1rem; color: var(--color-text-muted);">{{ t.footer_about }}</p>
-      </div>
-
-      <div>
-        <h4>{{ t.contacts }}</h4>
-        <a href="tel:+78001234567">{{ t.phone }}: <span class="nowrap">+7&nbsp;(800)&nbsp;123‑45‑67</span></a>
-        <a href="mailto:hello@vinyl-harbour.local">{{ t.email }}: <span class="nowrap">hello@vinyl‑harbour.local</span></a>
+        <p class="footer-about">{{ t.footer_about }}</p>
         <div class="social-row">
           <a href="#" class="social-link" data-soon="vk" aria-label="{{ t.vk }}" title="{{ t.vk }}">
             <span class="social-tag">VK</span>
@@ -122,7 +117,17 @@
         </div>
       </div>
 
-      <div>
+      <div class="footer-contacts">
+        <h4>{{ t.contacts }}</h4>
+        <a href="tel:+78001234567">{{ t.phone }}: <span class="nowrap">+7&nbsp;(800)&nbsp;123‑45‑67</span></a>
+        <a href="mailto:hello@vinyl-harbour.local">{{ t.email }}: <span class="nowrap">hello@vinyl‑harbour.local</span></a>
+        <div class="footer-address">
+          <p>г. Уфа, ул. Ленина, 12</p>
+          <p class="nowrap">пн‑вс 10:00–21:00</p>
+        </div>
+      </div>
+
+      <div class="footer-nav">
         <h4>{{ t.catalog }}</h4>
         <a href="{{ url_for('catalog.category', slug='instruments') }}">{{ t.instruments }}</a>
         <a href="{{ url_for('catalog.category', slug='vinyl') }}">{{ t.vinyl }}</a>
@@ -130,13 +135,13 @@
         <a href="{{ url_for('main.news_list') }}">{{ t.news }}</a>
       </div>
 
-      <div>
+      <div class="footer-map">
         <h4>{{ t.address }}</h4>
-        <p style="font-size: 0.875rem; color: var(--color-text-muted);">г. Уфа, ул. Ленина, 12<br><span class="nowrap">пн‑вс 10:00–21:00</span></p>
         <div class="map-embed">
           <iframe src="https://yandex.ru/map-widget/v1/?ll=55.957727%2C54.735152&z=14&pt=55.957727,54.735152,pm2rdm" loading="lazy" allowfullscreen title="Карта"></iframe>
         </div>
       </div>
+
     </div>
     <div class="copyright">
       <span>© 2014–2026 {{ t.site_name }}. {{ t.rights }}.</span>
