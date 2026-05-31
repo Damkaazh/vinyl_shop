@@ -97,6 +97,10 @@ def _auto_migrate(db):
             statements.append("ALTER TABLE products ADD COLUMN audio_mime VARCHAR(64)")
         if "audio_name" not in existing:
             statements.append("ALTER TABLE products ADD COLUMN audio_name VARCHAR(255)")
+        if "image_data" not in existing:
+            statements.append(f"ALTER TABLE products ADD COLUMN image_data {blob_type}")
+        if "image_mime" not in existing:
+            statements.append("ALTER TABLE products ADD COLUMN image_mime VARCHAR(64)")    
 
     # orders: discount / promo_code
     if "orders" in tables:
