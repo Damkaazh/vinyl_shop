@@ -85,7 +85,6 @@ class CheckoutForm(FlaskForm):
         ("post", "Почта России"),
     ], validators=[DataRequired()])
     payment_method = SelectField("Способ оплаты", choices=[
-        ("card", "Картой онлайн"),
         ("cash", "Наличными при получении"),
         ("sbp", "СБП"),
     ], validators=[DataRequired()])
@@ -123,6 +122,28 @@ class NewsForm(FlaskForm):
     image = FileField("Картинка", validators=[Optional(), FileAllowed(["jpg", "jpeg", "png", "gif", "webp"])])
     is_featured = BooleanField("Показывать на главной")
     submit = SubmitField("Сохранить")
+
+
+class PromoCodeForm(FlaskForm):
+    """Админская форма создания/редактирования промокода."""
+    code = StringField("Код", validators=[DataRequired(), Length(min=2, max=64), Regexp(r"^[A-Za-z0-9_\-]+$", message="Только латиница, цифры, _ и -")])
+    discount_type = SelectField("Тип скидки", choices=[("percent", "Процент (%)"), ("fixed", "Фиксированная (₽)")], validators=[DataRequired()])
+    discount_value = DecimalField("Размер скидки", validators=[DataRequired(), NumberRange(min=0)])
+    min_order = DecimalField("Мин. сумма заказа, ₽", validators=[Optional(), NumberRange(min=0)], default=0)
+    usage_limit = IntegerField("Лимит использований (0 = без лимита)", validators=[Optional(), NumberRange(min=0)], default=0)
+    valid_until = DateField("Действует до", validators=[Optional()])
+    is_active = BooleanField("Активен", default=True)
+    submit = SubmitField("Сохранить")
+
+    def validate_discount_value(self, field):
+        if self.discount_type.data == "percent" and field.data and float(field.data) > 100:
+            raise ValidationError("Процент не может быть больше 100.")
+
+
+class PromoApplyForm(FlaskForm):
+    """Поле ввода промокода в корзине/на checkout."""
+    code = StringField("Промокод", validators=[DataRequired(), Length(max=64)])
+    submit = SubmitField("Применить")
 
 
 class PromotionForm(FlaskForm):

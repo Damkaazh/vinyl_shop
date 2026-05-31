@@ -40,7 +40,35 @@
         <h3>{% if lang=='en' %}Summary{% else %}Итог{% endif %}</h3>
         <div class="row"><span>{% if lang=='en' %}Items{% else %}Товаров{% endif %}</span><span>{{ items|length }}</span></div>
         <div class="row"><span>{% if lang=='en' %}Delivery{% else %}Доставка{% endif %}</span><span style="color: var(--color-success);">{% if lang=='en' %}calculated next{% else %}рассчитается далее{% endif %}</span></div>
-        <div class="row total"><span>{{ t.total }}</span><span style="font-family: var(--font-mono); color: var(--color-primary);">{{ "{:,.0f}".format(total).replace(',', ' ') }} ₽</span></div>
+
+        {# === Промокод === #}
+        <div class="promo-box" style="margin: var(--space-4) 0; padding: var(--space-4); background: var(--color-surface-offset); border-radius: var(--radius-md);">
+          {% if promo %}
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: var(--space-3);">
+              <div>
+                <div style="font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); letter-spacing: .12em; text-transform: uppercase;">{% if lang=='en' %}Promo applied{% else %}Промокод активен{% endif %}</div>
+                <div style="font-family: var(--font-mono); font-weight: 600; color: var(--color-success);">{{ promo.code }}</div>
+              </div>
+              <form method="post" action="{{ url_for('cart.promo_clear') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                <button type="submit" class="btn btn-ghost btn-sm">{% if lang=='en' %}Remove{% else %}Убрать{% endif %}</button>
+              </form>
+            </div>
+          {% else %}
+            <form method="post" action="{{ url_for('cart.promo_apply') }}" style="display: flex; gap: var(--space-2);">
+              {{ promo_form.hidden_tag() }}
+              {{ promo_form.code(class_='input', placeholder=('Promo code' if lang=='en' else 'Промокод'), style='flex: 1; text-transform: uppercase;') }}
+              <button type="submit" class="btn btn-outline btn-sm">{% if lang=='en' %}Apply{% else %}Применить{% endif %}</button>
+            </form>
+          {% endif %}
+        </div>
+
+        {% if discount and discount > 0 %}
+          <div class="row"><span>{% if lang=='en' %}Subtotal{% else %}Подытог{% endif %}</span><span style="font-family: var(--font-mono);">{{ "{:,.0f}".format(subtotal).replace(',', ' ') }} ₽</span></div>
+          <div class="row"><span style="color: var(--color-success);">{% if lang=='en' %}Discount{% else %}Скидка{% endif %}</span><span style="font-family: var(--font-mono); color: var(--color-success);">−{{ "{:,.0f}".format(discount).replace(',', ' ') }} ₽</span></div>
+        {% endif %}
+
+        <div class="row total"><span>{{ t.total }}</span><span style="font-family: var(--font-mono); color: var(--color-primary);">{{ "{:,.0f}".format(total).replace(',', ' ') }} ₽</span></div>
         <a href="{{ url_for('cart.checkout') }}" class="btn btn-primary btn-block" style="margin-top: var(--space-4);">{{ t.checkout }} →</a>
 
         <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-divider);">

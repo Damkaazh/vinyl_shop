@@ -79,23 +79,33 @@ def create_app(config_class=Config):
 def _auto_migrate(db):
     """Добавляет недостающие колонки в существующую БД (без Flask-Migrate).
 
-    Нужно для новых полей audio_data / audio_mime / audio_name в products —
-    чтобы не заводить миграции вручную. Работает и на PostgreSQL, и на SQLite.
+    Работает и на PostgreSQL, и на SQLite.
     """
     from sqlalchemy import inspect, text
     insp = inspect(db.engine)
-    if "products" not in insp.get_table_names():
-        return
-    existing = {c["name"] for c in insp.get_columns("products")}
-    dialect = db.engine.dialect.name  # 'postgresql' или 'sqlite'
+    tables = insp.get_table_names()
+    dialect = db.engine.dialect.name
     blob_type = "BYTEA" if dialect == "postgresql" else "BLOB"
     statements = []
-    if "audio_data" not in existing:
-        statements.append(f"ALTER TABLE products ADD COLUMN audio_data {blob_type}")
-    if "audio_mime" not in existing:
-        statements.append("ALTER TABLE products ADD COLUMN audio_mime VARCHAR(64)")
-    if "audio_name" not in existing:
-        statements.append("ALTER TABLE products ADD COLUMN audio_name VARCHAR(255)")
+
+    # products: audio_data / audio_mime / audio_name
+    if "products" in tables:
+        existing = {c["name"] for c in insp.get_columns("products")}
+        if "audio_data" not in existing:
+            statements.append(f"ALTER TABLE products ADD COLUMN audio_data {blob_type}")
+        if "audio_mime" not in existing:
+            statements.append("ALTER TABLE products ADD COLUMN audio_mime VARCHAR(64)")
+        if "audio_name" not in existing:
+            statements.append("ALTER TABLE products ADD COLUMN audio_name VARCHAR(255)")
+
+    # orders: discount / promo_code
+    if "orders" in tables:
+        existing = {c["name"] for c in insp.get_columns("orders")}
+        if "discount" not in existing:
+            statements.append("ALTER TABLE orders ADD COLUMN discount NUMERIC(10,2) DEFAULT 0")
+        if "promo_code" not in existing:
+            statements.append("ALTER TABLE orders ADD COLUMN promo_code VARCHAR(64)")
+
     if statements:
         with db.engine.begin() as conn:
             for sql in statements:
