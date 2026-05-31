@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, jsonify, session
+from flask import render_template, request, redirect, url_for, flash, jsonify, session, g
 from flask_login import current_user, login_required
 from . import bp
 from ...extensions import db
@@ -25,15 +25,18 @@ def _get_active_promo(order_total: float):
     pid = session.get("promo_code_id")
     if not pid:
         return None, 0.0
+
     pc = PromoCode.query.get(pid)
     if not pc:
         session.pop("promo_code_id", None)
         return None, 0.0
-    ok, reason = pc.is_valid(order_total)
+
+    ok, reason = pc.isvalid(order_total)
     if not ok:
         session.pop("promo_code_id", None)
         flash(PROMO_ERRORS.get(reason, "Промокод больше не действует."), "warning")
         return None, 0.0
+
     return pc, pc.calc_discount(order_total)
 
 
@@ -45,6 +48,7 @@ def index():
     promo, discount = _get_active_promo(subtotal)
     total = max(0.0, subtotal - discount)
     promo_form = PromoApplyForm()
+
     return render_template(
         "cart/index.html",
         items=items,
@@ -63,18 +67,23 @@ def promo_apply():
     next_url = request.form.get("next") or url_for("cart.index")
     items = CartItem.query.filter_by(user_id=current_user.id).all()
     subtotal = sum(item.subtotal for item in items)
+
     if not form.validate_on_submit():
         flash("Введите промокод.", "warning")
         return redirect(next_url)
+
     code = form.code.data.strip().upper()
     pc = PromoCode.query.filter_by(code=code).first()
+
     if not pc:
         flash(PROMO_ERRORS["promo_not_found"], "danger")
         return redirect(next_url)
-    ok, reason = pc.is_valid(subtotal)
+
+    ok, reason = pc.isvalid(subtotal)
     if not ok:
         flash(PROMO_ERRORS.get(reason, "Промокод не подходит."), "danger")
         return redirect(next_url)
+
     session["promo_code_id"] = pc.id
     discount = pc.calc_discount(subtotal)
     flash(f"Промокод {pc.code} применён. Скидка: {discount:,.0f} ₽.".replace(",", "\u00a0"), "success")
@@ -94,17 +103,21 @@ def promo_clear():
 @login_required
 def add(product_id):
     product = Product.query.get_or_404(product_id)
-    qty = int(request.form.get("quantity", 1))
+    qty = max(1, int(request.form.get("quantity", 1)))
+
     item = CartItem.query.filter_by(user_id=current_user.id, product_id=product.id).first()
     if item:
         item.quantity += qty
     else:
         item = CartItem(user_id=current_user.id, product_id=product.id, quantity=qty)
         db.session.add(item)
+
     db.session.commit()
+
     if request.headers.get("X-Requested-With") == "XMLHttpRequest":
         count = sum(i.quantity for i in CartItem.query.filter_by(user_id=current_user.id).all())
         return jsonify({"ok": True, "count": count})
+
     flash("Товар добавлен в корзину.", "success")
     return redirect(request.referrer or url_for("catalog.index"))
 
@@ -136,44 +149,51 @@ def checkout():
     if not items:
         flash("Корзина пуста.", "warning")
         return redirect(url_for("cart.index"))
+
     subtotal = sum(item.subtotal for item in items)
     promo, discount = _get_active_promo(subtotal)
     total = max(0.0, subtotal - discount)
+
     form = CheckoutForm()
     promo_form = PromoApplyForm()
+    lang = getattr(g, "lang", "ru") or "ru"
+
     if request.method == "GET":
-        form.full_name.data = current_user.full_name
+        form.full_name.data = current_user.fullname
         form.email.data = current_user.email
+
     if form.validate_on_submit():
         order = Order(
             user_id=current_user.id,
-            full_name=form.full_name.data,
+            fullname=form.full_name.data,
             email=form.email.data,
             phone=form.phone.data,
             address=form.address.data,
-            delivery_method=form.delivery_method.data,
-            payment_method=form.payment_method.data,
+            deliverymethod=form.delivery_method.data,
+            paymentmethod=form.payment_method.data,
             comment=form.comment.data or "",
             total=total,
             discount=discount,
-            promo_code=promo.code if promo else None,
+            promocode=promo.code if promo else None,
         )
         db.session.add(order)
         db.session.flush()
+
         for ci in items:
             db.session.add(OrderItem(
                 order_id=order.id,
                 product_id=ci.product_id,
-                name=ci.product.name_ru,
+                name=ci.product.name(lang),
                 price=ci.product.price,
                 quantity=ci.quantity,
             ))
-        # инкремент счётчика промокода
+
         if promo:
-            promo.used_count = (promo.used_count or 0) + 1
-        # очищаем корзину
+            promo.usedcount = (promo.usedcount or 0) + 1
+
         for ci in items:
             db.session.delete(ci)
+
         db.session.commit()
         session.pop("promo_code_id", None)
 
@@ -182,7 +202,9 @@ def checkout():
             flash("Заказ оформлен. Письмо с подтверждением отправлено на ваш e-mail.", "success")
         else:
             flash("Заказ оформлен. Подтверждение сохранено в журнал писем (instance/emails.log).", "success")
+
         return redirect(url_for("cart.success", order_id=order.id))
+
     return render_template(
         "cart/checkout.html",
         form=form,

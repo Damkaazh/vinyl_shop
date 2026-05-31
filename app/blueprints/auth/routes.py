@@ -12,6 +12,7 @@ from ...utils import save_upload, send_welcome_email, send_login_notification
 def register():
     if current_user.is_authenticated:
         return redirect(url_for("main.index"))
+
     form = RegistrationForm()
     if form.validate_on_submit():
         existing = User.query.filter(or_(
@@ -19,6 +20,7 @@ def register():
             User.login == form.login.data,
             User.nickname == form.nickname.data,
         )).first()
+
         if existing:
             if existing.email == form.email.data:
                 form.email.errors.append("Этот e-mail уже занят.")
@@ -33,23 +35,28 @@ def register():
         user = User(
             email=form.email.data,
             login=form.login.data,
-            full_name=form.full_name.data,
+            fullname=form.full_name.data,
             nickname=form.nickname.data,
-            birth_date=form.birth_date.data,
+            birthdate=form.birth_date.data,
             gender=form.gender.data,
             avatar=avatar or "default-avatar.svg",
         )
-        user.set_password(form.password.data)
+        user.setpassword(form.password.data)
+
         db.session.add(user)
         db.session.commit()
+
         login_user(user)
         _record_session(user)
+
         try:
             send_welcome_email(user)
         except Exception as e:
             current_app.logger.error(f"send_welcome_email failed: {e}")
+
         flash("Регистрация прошла успешно. Добро пожаловать!", "success")
         return redirect(url_for("account.index"))
+
     return render_template("auth/register.html", form=form)
 
 
@@ -57,15 +64,19 @@ def register():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for("main.index"))
+
     form = LoginForm()
     if form.validate_on_submit():
         ident = form.identifier.data.strip()
         user = User.query.filter(or_(User.email == ident, User.login == ident)).first()
-        if not user or not user.check_password(form.password.data):
+
+        if not user or not user.checkpassword(form.password.data):
             flash("Неверный e-mail/логин или пароль.", "danger")
             return render_template("auth/login.html", form=form)
+
         login_user(user, remember=form.remember.data)
         _record_session(user)
+
         try:
             send_login_notification(
                 user,
@@ -74,9 +85,11 @@ def login():
             )
         except Exception as e:
             current_app.logger.error(f"send_login_notification failed: {e}")
+
         flash("Вход выполнен.", "success")
         next_url = request.args.get("next") or url_for("account.index")
         return redirect(next_url)
+
     return render_template("auth/login.html", form=form)
 
 
@@ -99,9 +112,9 @@ def forgot():
 
 def _record_session(user):
     sess = LoginSession(
-        user_id=user.id,
-        ip_address=request.remote_addr,
-        user_agent=request.user_agent.string[:255] if request.user_agent else None,
+        userid=user.id,
+        ipaddress=request.remote_addr,
+        useragent=request.user_agent.string[:255] if request.user_agent else None,
     )
     db.session.add(sess)
     db.session.commit()
