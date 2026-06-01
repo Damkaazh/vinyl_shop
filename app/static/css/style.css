@@ -854,47 +854,44 @@ table.data tbody tr:hover { background: var(--color-surface-2); }
   position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
 }
 .vinyl-bg__disc {
-  position: absolute; border-radius: 50%; opacity: 0.22;
-  /* Многослойная пластинка: лейбл · блик-сектор · бороздки · база */
+  position: absolute; border-radius: 50%; opacity: 0.38;
   background:
-    /* центральный лейбл */
     radial-gradient(circle at 50% 50%,
       var(--color-primary) 0 11%,
       var(--color-primary-active) 11% 13%,
       transparent 13% 14.5%),
-    /* дырка в центре */
     radial-gradient(circle at 50% 50%, var(--color-bg) 0 1.5%, transparent 1.6%),
-    /* блик-сектор (свет на виниле) */
     conic-gradient(from 200deg at 50% 50%,
       transparent 0deg,
-      rgba(231, 159, 95, 0.45) 30deg,
-      rgba(231, 159, 95, 0.10) 70deg,
+      rgba(231, 159, 95, 0.65) 30deg,
+      rgba(231, 159, 95, 0.20) 70deg,
       transparent 110deg,
       transparent 360deg),
-    /* бороздки */
     repeating-radial-gradient(circle at 50% 50%,
-      rgba(255, 255, 255, 0.18) 0 1px,
+      rgba(255, 255, 255, 0.28) 0 1px,
       transparent 1px 5px),
-    /* база — пластик */
     radial-gradient(circle at 50% 50%, #1a1410 0%, #0d0907 100%);
   box-shadow:
-    0 0 0 2px rgba(231, 159, 95, 0.35) inset,
-    0 0 40px rgba(231, 159, 95, 0.18);
+    0 0 0 2px rgba(231, 159, 95, 0.55) inset,
+    0 0 60px rgba(231, 159, 95, 0.28);
   animation: vinyl-spin 14s linear infinite;
   will-change: transform;
 }
-.vinyl-bg__disc--1 { width: 560px; height: 560px; top: -200px; right: -180px; animation-duration: 16s; }
-.vinyl-bg__disc--2 { width: 420px; height: 420px; bottom: -140px; left: -140px; animation-duration: 12s; animation-direction: reverse; opacity: 0.20; }
-.vinyl-bg__disc--3 { width: 300px; height: 300px; top: 42%; left: 58%; animation-duration: 18s; opacity: 0.16; }
-[data-theme='dark'] .vinyl-bg__disc { opacity: 0.28; }
-[data-theme='dark'] .vinyl-bg__disc--2 { opacity: 0.24; }
-[data-theme='dark'] .vinyl-bg__disc--3 { opacity: 0.18; }
+.vinyl-bg__disc--1 { width: 580px; height: 580px; top: -200px; right: -180px; animation-duration: 16s; opacity: 0.40; }
+.vinyl-bg__disc--2 { width: 440px; height: 440px; bottom: -140px; left: -140px; animation-duration: 12s; animation-direction: reverse; opacity: 0.34; }
+.vinyl-bg__disc--3 { width: 300px; height: 300px; top: 42%; left: 58%; animation-duration: 18s; opacity: 0.28; }
+.vinyl-bg__disc--4 { width: 220px; height: 220px; top: 20%; left: 12%; animation-duration: 22s; animation-direction: reverse; opacity: 0.24; }
+[data-theme='dark'] .vinyl-bg__disc { opacity: 0.44; }
+[data-theme='dark'] .vinyl-bg__disc--2 { opacity: 0.38; }
+[data-theme='dark'] .vinyl-bg__disc--3 { opacity: 0.32; }
+[data-theme='dark'] .vinyl-bg__disc--4 { opacity: 0.28; }
 @keyframes vinyl-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
   .vinyl-bg__disc { animation: none; }
 }
 @media (max-width: 720px) {
   .vinyl-bg__disc--3 { display: none; }
+  .vinyl-bg__disc--4 { display: none; }
   .vinyl-bg__disc--1 { width: 340px; height: 340px; top: -110px; right: -110px; }
   .vinyl-bg__disc--2 { width: 260px; height: 260px; bottom: -90px; left: -90px; }
 }
