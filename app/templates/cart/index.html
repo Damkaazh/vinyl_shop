@@ -13,15 +13,7 @@
       <div class="cart-list">
         {% for ci in items %}
         <div class="cart-item">
-          <a href="{{ url_for('catalog.detail', product_id=ci.product.id) }}" class="img">
-  {% if ci.product.image == 'db' or ci.product.has_db_image or ci.product.hasdbimage %}
-    <img src="{{ url_for('api.product_image', product_id=ci.product.id) }}" alt="{{ ci.product.name(lang) }}">
-  {% elif ci.product.image %}
-    <img src="{{ url_for('static', filename='img/' + ci.product.image) }}" alt="{{ ci.product.name(lang) }}">
-  {% else %}
-    <img src="{{ url_for('static', filename='img/placeholder.jpg') }}" alt="{{ ci.product.name(lang) }}">
-  {% endif %}
-</a>
+          <a href="{{ url_for('catalog.detail', product_id=ci.product.id) }}" class="img"><img src="{{ url_for('static', filename='img/' + ci.product.image) }}" alt=""></a>
           <div class="info">
             <div class="card-cat" style="font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); letter-spacing: .12em; text-transform: uppercase;">{{ ci.product.category.name(lang) }}</div>
             <h3 style="font-family: var(--font-display); margin-top: 4px;"><a href="{{ url_for('catalog.detail', product_id=ci.product.id) }}">{{ ci.product.name(lang) }}</a></h3>
