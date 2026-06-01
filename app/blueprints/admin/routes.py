@@ -267,7 +267,7 @@ def order_status(order_id):
 # ===== Промокоды =====
 @bp.route("/promocodes")
 def promocodes():
-    items = PromoCode.query.order_by(PromoCode.created_at.desc()).all()
+    items = PromoCode.query.order_by(PromoCode.id.desc()).all()
     return render_template("admin/promocodes.html", items=items)
 
 
