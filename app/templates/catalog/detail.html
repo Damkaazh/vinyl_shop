@@ -13,7 +13,13 @@
 
     <div class="product-detail">
       <div class="product-gallery">
-        <img src="{{ url_for('static', filename='img/' + product.image) }}" alt="{{ product.name(lang) }}">
+        {% if product.image == 'db' or product.has_db_image or product.hasdbimage %}
+  <img src="{{ url_for('api.product_image', product_id=product.id) }}" alt="{{ product.name(lang) }}">
+{% elif product.image %}
+  <img src="{{ url_for('static', filename='img/' + product.image) }}" alt="{{ product.name(lang) }}">
+{% else %}
+  <img src="{{ url_for('static', filename='img/placeholder.jpg') }}" alt="{{ product.name(lang) }}">
+{% endif %}
       </div>
       <div class="product-info">
         <div class="section-eyebrow">{{ product.category.name(lang) }}</div>
