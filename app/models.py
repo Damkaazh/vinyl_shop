@@ -23,7 +23,6 @@ from .extensions import db, login_manager
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
-
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     login = db.Column(db.String(64), unique=True, nullable=False, index=True)
@@ -61,7 +60,6 @@ def load_user(user_id):
 
 class LoginSession(db.Model):
     __tablename__ = "login_sessions"
-
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     ip_address = db.Column(db.String(45))
@@ -71,7 +69,6 @@ class LoginSession(db.Model):
 
 class Category(db.Model):
     __tablename__ = "categories"
-
     id = db.Column(db.Integer, primary_key=True)
     slug = db.Column(db.String(64), unique=True, nullable=False)
     name_ru = db.Column(db.String(120), nullable=False)
@@ -87,43 +84,33 @@ class Category(db.Model):
 
 class Product(db.Model):
     __tablename__ = "products"
-
     id = db.Column(db.Integer, primary_key=True)
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=False, index=True)
-
     name_ru = db.Column(db.String(200), nullable=False)
     name_en = db.Column(db.String(200), nullable=False)
-
     short_ru = db.Column(db.String(400), default="")
     short_en = db.Column(db.String(400), default="")
-
     description_ru = db.Column(db.Text, default="")
     description_en = db.Column(db.Text, default="")
-
-    specs_ru = db.Column(db.Text, default="")   # характеристики, по строке "ключ: значение"
+    specs_ru = db.Column(db.Text, default="")  # характеристики, по строке "ключ: значение"
     specs_en = db.Column(db.Text, default="")
-
     price = db.Column(db.Numeric(10, 2), nullable=False)
-    old_price = db.Column(db.Numeric(10, 2))    # для акций
+    old_price = db.Column(db.Numeric(10, 2))  # для акций
     stock = db.Column(db.Integer, default=0)
-
-    # Если image == "db", основная картинка берётся из image_data/image_mime через API-роут.
-    # Если image содержит имя файла, используется static/img/<image>.
     image = db.Column(db.String(255), default="placeholder.svg")
-
-    # Изображение в БД — как с аудио.
-    # deferred нужен, чтобы не тащить blob при обычном листинге каталога.
-    image_data = orm.deferred(db.Column(db.LargeBinary, nullable=True))
-    image_mime = db.Column(db.String(64), nullable=True)
-
     is_featured = db.Column(db.Boolean, default=False)  # для слайдера
-
-    # Аудио-превью. deferred — чтобы блоб не грузился при обычном SELECT.
+    # Аудио-превью. Критично: deferred — блоб не грузится при обычном SELECT,
+    # только при явном обращении к product.audio_data. Без этого любой листинг каталога тянет в RAM
+    # все аудиофайлы → OOM на Render free (512 МБ).
     audio_data = orm.deferred(db.Column(db.LargeBinary, nullable=True))
-    audio_mime = db.Column(db.String(64), nullable=True)    # например audio/mpeg, audio/ogg
-    audio_name = db.Column(db.String(255), nullable=True)   # исходное имя файла
-
+    audio_mime = db.Column(db.String(64), nullable=True)   # например audio/mpeg, audio/ogg
+    audio_name = db.Column(db.String(255), nullable=True)  # исходное имя файла
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    @property
+    def has_audio(self):
+        # Не дёргаем блоб — смотрим по лёгким колонкам. audio_name всегда заполняется вместе с audio_data.
+        return bool(self.audio_name) or bool(self.audio_mime)
 
     images = db.relationship("ProductImage", backref="product", lazy="dynamic", cascade="all, delete-orphan")
     reviews = db.relationship("Review", backref="product", lazy="dynamic", cascade="all, delete-orphan")
@@ -145,14 +132,6 @@ class Product(db.Model):
         return (self.stock or 0) > 0
 
     @property
-    def has_audio(self):
-        return bool(self.audio_name) or bool(self.audio_mime)
-
-    @property
-    def has_image(self):
-        return bool(self.image_data) or bool(self.image_mime)
-
-    @property
     def avg_rating(self):
         approved = [r.rating for r in self.reviews if r.is_approved]
         return round(sum(approved) / len(approved), 1) if approved else 0
@@ -164,7 +143,6 @@ class Product(db.Model):
 
 class ProductImage(db.Model):
     __tablename__ = "product_images"
-
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False, index=True)
     image = db.Column(db.String(255), nullable=False)
@@ -172,7 +150,6 @@ class ProductImage(db.Model):
 
 class Review(db.Model):
     __tablename__ = "reviews"
-
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False, index=True)
@@ -184,7 +161,6 @@ class Review(db.Model):
 
 class Order(db.Model):
     __tablename__ = "orders"
-
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     full_name = db.Column(db.String(160), nullable=False)
@@ -192,7 +168,7 @@ class Order(db.Model):
     phone = db.Column(db.String(40), nullable=False)
     address = db.Column(db.String(255), nullable=False)
     delivery_method = db.Column(db.String(40), default="pickup")  # pickup / courier / post
-    payment_method = db.Column(db.String(40), default="cash")     # cash / sbp
+    payment_method = db.Column(db.String(40), default="cash")  # cash / sbp (картой онлайн отключена)
     comment = db.Column(db.Text, default="")
     total = db.Column(db.Numeric(10, 2), nullable=False)
     discount = db.Column(db.Numeric(10, 2), default=0)
@@ -204,12 +180,12 @@ class Order(db.Model):
 
     @property
     def subtotal(self):
+        """Сумма до скидки."""
         return float(self.total) + float(self.discount or 0)
 
 
 class OrderItem(db.Model):
     __tablename__ = "order_items"
-
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey("orders.id"), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
@@ -227,7 +203,6 @@ class OrderItem(db.Model):
 class Favorite(db.Model):
     """Избранное: либо новость, либо товар."""
     __tablename__ = "favorites"
-
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"))
@@ -240,14 +215,13 @@ class Favorite(db.Model):
 
 class News(db.Model):
     __tablename__ = "news"
-
     id = db.Column(db.Integer, primary_key=True)
     title_ru = db.Column(db.String(200), nullable=False)
     title_en = db.Column(db.String(200), nullable=False)
     body_ru = db.Column(db.Text, nullable=False)
     body_en = db.Column(db.Text, nullable=False)
     image = db.Column(db.String(255), default="news-default.svg")
-    rating = db.Column(db.Integer, default=0)
+    rating = db.Column(db.Integer, default=0)  # сумма оценок
     rating_count = db.Column(db.Integer, default=0)
     is_featured = db.Column(db.Boolean, default=False)
     published_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -265,7 +239,6 @@ class News(db.Model):
 
 class Promotion(db.Model):
     __tablename__ = "promotions"
-
     id = db.Column(db.Integer, primary_key=True)
     title_ru = db.Column(db.String(200), nullable=False)
     title_en = db.Column(db.String(200), nullable=False)
@@ -286,7 +259,6 @@ class Promotion(db.Model):
 class PromoCode(db.Model):
     """Промокод с фиксированной (₽) или процентной скидкой."""
     __tablename__ = "promo_codes"
-
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(64), unique=True, nullable=False, index=True)
     discount_type = db.Column(db.String(16), default="percent")  # 'percent' | 'fixed'
@@ -299,6 +271,7 @@ class PromoCode(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def is_valid(self, order_total: float) -> tuple[bool, str]:
+        """Проверяет валидность промокода для заказа. Возвращает (ok, причина-ключ)."""
         if not self.is_active:
             return False, "promo_inactive"
         if self.valid_until and self.valid_until < date.today():
@@ -310,6 +283,7 @@ class PromoCode(db.Model):
         return True, "ok"
 
     def calc_discount(self, order_total: float) -> float:
+        """Считает размер скидки в ₽ (не больше суммы заказа)."""
         if self.discount_type == "percent":
             d = float(order_total) * float(self.discount_value) / 100.0
         else:
@@ -319,7 +293,6 @@ class PromoCode(db.Model):
 
 class CartItem(db.Model):
     __tablename__ = "cart_items"
-
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
@@ -335,7 +308,6 @@ class CartItem(db.Model):
 
 class RecentlyViewed(db.Model):
     __tablename__ = "recently_viewed"
-
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False, index=True)
     product_id = db.Column(db.Integer, db.ForeignKey("products.id"), nullable=False)
