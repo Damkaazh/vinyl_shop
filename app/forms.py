@@ -86,7 +86,7 @@ class CheckoutForm(FlaskForm):
     ], validators=[DataRequired()])
     payment_method = SelectField("Способ оплаты", choices=[
         ("cash", "Наличными при получении"),
-        ("sbp", "СБП"),
+        ("card", "Картой при получении"),
     ], validators=[DataRequired()])
     comment = TextAreaField("Комментарий", validators=[Optional(), Length(max=500)])
     submit = SubmitField("Подтвердить заказ")
