@@ -851,7 +851,7 @@ table.data tbody tr:hover { background: var(--color-surface-2); }
 
 /* === Декоративные вращающиеся пластинки на фоне === */
 .vinyl-bg {
-  position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+  position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden;
 }
 .vinyl-bg__disc {
   position: absolute; border-radius: 50%; opacity: 0.38;
