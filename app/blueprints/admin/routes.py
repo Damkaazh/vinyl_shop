@@ -45,6 +45,15 @@ AUDIO_MIME_BY_EXT = {
     "aac": "audio/aac",
 }
 
+IMAGE_MIME_BY_EXT = {
+    "jpg": "image/jpeg",
+    "jpeg": "image/jpeg",
+    "png": "image/png",
+    "gif": "image/gif",
+    "webp": "image/webp",
+    "svg": "image/svg+xml",
+}
+
 
 def _read_audio_upload(file_storage):
     """Читает загруженный аудио-файл в (bytes, mime, original_name)."""
@@ -61,13 +70,28 @@ def _read_audio_upload(file_storage):
     return data, mime, name
 
 
+def _read_image_upload(file_storage):
+    """Читает загруженное изображение в (bytes, mime)."""
+    if not file_storage or not hasattr(file_storage, "read"):
+        return None
+    name = getattr(file_storage, "filename", "")
+    if not name:
+        return None
+    data = file_storage.read()
+    if not data:
+        return None
+    ext = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    mime = IMAGE_MIME_BY_EXT.get(ext, getattr(file_storage, "mimetype", None) or "image/jpeg")
+    return data, mime
+
+
 @bp.route("/products/new", methods=["GET", "POST"])
 def product_new():
     form = ProductForm()
     form.category_id.choices = [(c.id, c.name_ru) for c in Category.query.order_by(Category.id).all()]
     if form.validate_on_submit():
         try:
-            image = save_upload(form.image.data, subdir="products") if form.image.data else None
+            image_upload = _read_image_upload(form.image.data) if form.image.data else None
             p = Product(
                 category_id=form.category_id.data,
                 name_ru=form.name_ru.data, name_en=form.name_en.data,
@@ -76,8 +100,10 @@ def product_new():
                 specs_ru=form.specs_ru.data or "", specs_en=form.specs_en.data or "",
                 price=form.price.data, old_price=form.old_price.data,
                 stock=form.stock.data, is_featured=form.is_featured.data,
-                image=image or "placeholder.svg",
+                image="db" if image_upload else "placeholder.svg",
             )
+            if image_upload:
+                p.image_data, p.image_mime = image_upload
             audio = _read_audio_upload(form.audio.data)
             if audio:
                 p.audio_data, p.audio_mime, p.audio_name = audio
@@ -100,7 +126,7 @@ def product_edit(product_id):
     form.category_id.choices = [(c.id, c.name_ru) for c in Category.query.order_by(Category.id).all()]
     if form.validate_on_submit():
         try:
-            image = save_upload(form.image.data, subdir="products") if form.image.data else None
+            image_upload = _read_image_upload(form.image.data) if form.image.data else None
             p.category_id = form.category_id.data
             p.name_ru, p.name_en = form.name_ru.data, form.name_en.data
             p.short_ru, p.short_en = form.short_ru.data or "", form.short_en.data or ""
@@ -110,8 +136,9 @@ def product_edit(product_id):
             p.old_price = form.old_price.data
             p.stock = form.stock.data
             p.is_featured = form.is_featured.data
-            if image:
-                p.image = image
+            if image_upload:
+                p.image_data, p.image_mime = image_upload
+                p.image = "db"
             audio = _read_audio_upload(form.audio.data)
             if audio:
                 p.audio_data, p.audio_mime, p.audio_name = audio
