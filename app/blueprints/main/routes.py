@@ -28,7 +28,7 @@ def index():
         slider_items.append({
             "kind": "news",
             "id": n.id,
-            "image": url_for("static", filename="img/news/" + n.image) if n.image and not n.image.startswith("/") and not n.image.startswith("http") else (n.image or ""),
+            "image": url_for("static", filename="img/" + n.image) if n.image else "",
             "title_ru": n.title_ru, "title_en": n.title_en,
             "short_ru": (n.body_ru or "")[:160],
             "short_en": (n.body_en or "")[:160],
