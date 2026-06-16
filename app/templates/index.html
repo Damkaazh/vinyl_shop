@@ -26,7 +26,7 @@
         {% for s in slider_items %}
         <article class="slide">
           <div class="slide-image">
-            <img src="{{ url_for('static', filename='img/' + s.image) }}" alt="">
+            <img src="{{ s.image }}" alt="">
           </div>
           <div>
             <span class="slide-kind">
