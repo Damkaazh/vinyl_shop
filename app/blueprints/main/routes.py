@@ -1,4 +1,5 @@
-from flask import render_template, g, request, jsonify
+"""Маршруты главного блюпринта."""
+from flask import render_template, g, request, jsonify, url_for
 from sqlalchemy import or_
 from . import bp
 from ...models import Product, News, Promotion, Category
@@ -10,13 +11,13 @@ def index():
     featured_news = News.query.filter_by(is_featured=True).order_by(News.published_at.desc()).limit(4).all()
     promotions = Promotion.query.order_by(Promotion.created_at.desc()).limit(6).all()
     categories = Category.query.order_by(Category.id).all()
-    # Слайдер: топ-товары + featured news вместе
+
     slider_items = []
     for p in featured_products[:5]:
         slider_items.append({
             "kind": "product",
             "id": p.id,
-            "image": p.image,
+            "image": url_for("api.product_image", product_id=p.id) if p.image == "db" else url_for("static", filename="img/" + p.image),
             "title_ru": p.name_ru, "title_en": p.name_en,
             "short_ru": p.short_ru or p.name_ru,
             "short_en": p.short_en or p.name_en,
@@ -27,7 +28,7 @@ def index():
         slider_items.append({
             "kind": "news",
             "id": n.id,
-            "image": n.image,
+            "image": url_for("static", filename="img/news/" + n.image) if n.image and not n.image.startswith("/") and not n.image.startswith("http") else (n.image or ""),
             "title_ru": n.title_ru, "title_en": n.title_en,
             "short_ru": (n.body_ru or "")[:160],
             "short_en": (n.body_en or "")[:160],
