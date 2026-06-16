@@ -11,10 +11,18 @@
     <tbody>
       {% for p in items %}
       <tr>
-        <td><div style="width: 50px; height: 50px; border-radius: 4px; overflow: hidden; background: var(--color-surface-offset);"><img src="{{ url_for('static', filename='img/' + p.image) }}" alt="" style="width: 100%; height: 100%; object-fit: cover;"></div></td>
+        <td>
+          <div style="width: 50px; height: 50px; border-radius: 4px; overflow: hidden; background: var(--color-surface-offset);">
+            {% if p.image == 'db' %}
+              <img src="{{ url_for('api.product_image', product_id=p.id) }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+              <img src="{{ url_for('static', filename='img/' + p.image) }}" alt="" style="width: 100%; height: 100%; object-fit: cover;">
+            {% endif %}
+          </div>
+        </td>
         <td><strong>{{ p.name_ru }}</strong>{% if p.is_featured %} <span class="badge accent">FEATURED</span>{% endif %}<br><small style="color: var(--color-text-muted);">{{ p.name_en }}</small></td>
         <td>{{ p.category.name_ru }}</td>
-        <td class="cell-price" style="font-family: var(--font-mono); color: var(--color-primary); white-space: nowrap;">{{ "{:,.0f}".format(p.price).replace(',', ' ') }} ₽</td>
+        <td class="cell-price" style="font-family: var(--font-mono); color: var(--color-primary); white-space: nowrap;">{{ "{:,.0f}".format(p.price).replace(',', ' ') }} ₽</td>
         <td class="cell-qty" style="white-space: nowrap;">{{ p.stock }}</td>
         <td class="cell-actions" style="white-space: nowrap;">
           <a href="{{ url_for('admin.product_edit', product_id=p.id) }}" class="btn btn-outline btn-sm">Изм.</a>
