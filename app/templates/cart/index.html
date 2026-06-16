@@ -13,7 +13,13 @@
       <div class="cart-list">
         {% for ci in items %}
         <div class="cart-item">
-          <a href="{{ url_for('catalog.detail', product_id=ci.product.id) }}" class="img"><img src="{{ url_for('static', filename='img/' + ci.product.image) }}" alt=""></a>
+          <a href="{{ url_for('catalog.detail', product_id=ci.product.id) }}" class="img">
+            {% if ci.product.image == 'db' %}
+              <img src="{{ url_for('api.product_image', product_id=ci.product.id) }}" alt="">
+            {% else %}
+              <img src="{{ url_for('static', filename='img/' + ci.product.image) }}" alt="">
+            {% endif %}
+          </a>
           <div class="info">
             <div class="card-cat" style="font-family: var(--font-mono); font-size: 11px; color: var(--color-text-muted); letter-spacing: .12em; text-transform: uppercase;">{{ ci.product.category.name(lang) }}</div>
             <h3 style="font-family: var(--font-display); margin-top: 4px;"><a href="{{ url_for('catalog.detail', product_id=ci.product.id) }}">{{ ci.product.name(lang) }}</a></h3>
@@ -64,11 +70,11 @@
         </div>
 
         {% if discount and discount > 0 %}
-          <div class="row"><span>{% if lang=='en' %}Subtotal{% else %}Подытог{% endif %}</span><span style="font-family: var(--font-mono);">{{ "{:,.0f}".format(subtotal).replace(',', ' ') }} ₽</span></div>
-          <div class="row"><span style="color: var(--color-success);">{% if lang=='en' %}Discount{% else %}Скидка{% endif %}</span><span style="font-family: var(--font-mono); color: var(--color-success);">−{{ "{:,.0f}".format(discount).replace(',', ' ') }} ₽</span></div>
+          <div class="row"><span>{% if lang=='en' %}Subtotal{% else %}Подытог{% endif %}</span><span style="font-family: var(--font-mono);">{{ "{:,.0f}".format(subtotal).replace(',', ' ') }} ₽</span></div>
+          <div class="row"><span style="color: var(--color-success);">{% if lang=='en' %}Discount{% else %}Скидка{% endif %}</span><span style="font-family: var(--font-mono); color: var(--color-success);">−{{ "{:,.0f}".format(discount).replace(',', ' ') }} ₽</span></div>
         {% endif %}
 
-        <div class="row total"><span>{{ t.total }}</span><span style="font-family: var(--font-mono); color: var(--color-primary);">{{ "{:,.0f}".format(total).replace(',', ' ') }} ₽</span></div>
+        <div class="row total"><span>{{ t.total }}</span><span style="font-family: var(--font-mono); color: var(--color-primary);">{{ "{:,.0f}".format(total).replace(',', ' ') }} ₽</span></div>
         <a href="{{ url_for('cart.checkout') }}" class="btn btn-primary btn-block" style="margin-top: var(--space-4);">{{ t.checkout }} →</a>
 
         <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--color-divider);">
