@@ -29,7 +29,15 @@
 
   <div class="form-row">
     {{ form.image.label }}
-    {% if item and item.image %}<div style="margin-bottom: 8px;"><img src="{{ url_for('static', filename='img/' + item.image) }}" style="height: 80px; border-radius: 4px;"></div>{% endif %}
+    {% if item and item.image %}
+      <div style="margin-bottom: 8px;">
+        {% if item.image == 'db' %}
+          <img src="{{ url_for('api.product_image', product_id=item.id) }}" style="height: 80px; border-radius: 4px;">
+        {% else %}
+          <img src="{{ url_for('static', filename='img/' + item.image) }}" style="height: 80px; border-radius: 4px;">
+        {% endif %}
+      </div>
+    {% endif %}
     {{ form.image(class_='input') }}
   </div>
 
