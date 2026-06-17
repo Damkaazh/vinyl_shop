@@ -207,6 +207,9 @@ class News(db.Model):
     body_ru = db.Column(db.Text, nullable=False)
     body_en = db.Column(db.Text, nullable=False)
     image = db.Column(db.String(255), default="news-default.svg")
+    # Хранение изображения в БД (Render стирает файлы при деплое)
+    image_data = orm.deferred(db.Column(db.LargeBinary, nullable=True))
+    image_mime = db.Column(db.String(64), nullable=True)
     rating = db.Column(db.Integer, default=0)
     rating_count = db.Column(db.Integer, default=0)
     is_featured = db.Column(db.Boolean, default=False)
@@ -221,7 +224,6 @@ class News(db.Model):
     @property
     def avg_rating(self):
         return round(self.rating / self.rating_count, 1) if self.rating_count else 0
-
 
 class Promotion(db.Model):
     __tablename__ = "promotions"

@@ -175,12 +175,15 @@ def news_list():
 def news_new():
     form = NewsForm()
     if form.validate_on_submit():
-        image = save_upload(form.image.data, subdir="news") if form.image.data else None
+        image_upload = _read_image_upload(form.image.data)
         n = News(
             title_ru=form.title_ru.data, title_en=form.title_en.data,
             body_ru=form.body_ru.data, body_en=form.body_en.data,
-            is_featured=form.is_featured.data, image=image or "news-default.svg",
+            is_featured=form.is_featured.data,
+            image="db" if image_upload else "news-default.svg",
         )
+        if image_upload:
+            n.image_data, n.image_mime = image_upload
         db.session.add(n)
         db.session.commit()
         flash("Новость добавлена.", "success")
@@ -193,12 +196,13 @@ def news_edit(news_id):
     n = News.query.get_or_404(news_id)
     form = NewsForm(obj=n)
     if form.validate_on_submit():
-        image = save_upload(form.image.data, subdir="news") if form.image.data else None
+        image_upload = _read_image_upload(form.image.data)
         n.title_ru, n.title_en = form.title_ru.data, form.title_en.data
         n.body_ru, n.body_en = form.body_ru.data, form.body_en.data
         n.is_featured = form.is_featured.data
-        if image:
-            n.image = image
+        if image_upload:
+            n.image_data, n.image_mime = image_upload
+            n.image = "db"
         db.session.commit()
         flash("Новость обновлена.", "success")
         return redirect(url_for("admin.news_list"))

@@ -28,12 +28,12 @@ def index():
         slider_items.append({
             "kind": "news",
             "id": n.id,
-            "image": url_for("static", filename="img/" + n.image) if n.image else "",
+            "image": url_for("api.news_image", news_id=n.id) if n.image == "db" else url_for("static", filename="img/" + n.image),
             "title_ru": n.title_ru, "title_en": n.title_en,
             "short_ru": (n.body_ru or "")[:160],
             "short_en": (n.body_en or "")[:160],
             "url": f"/news/{n.id}",
-        })
+    })
     return render_template(
         "index.html",
         slider_items=slider_items,

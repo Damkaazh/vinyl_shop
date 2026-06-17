@@ -69,6 +69,19 @@ def product_image(product_id):
     )
 
 
+@bp.route("/news-image/<int:news_id>")
+def news_image(news_id):
+    """Отдаёт изображение новости из базы данных."""
+    n = News.query.options(sa_orm.undefer(News.image_data)).get_or_404(news_id)
+    if not n.image_data:
+        abort(404)
+    return send_file(
+        io.BytesIO(n.image_data),
+        mimetype=n.image_mime or "image/jpeg",
+        max_age=86400,
+    )
+
+
 @bp.route("/external-news")
 def external_news():
     """Псевдо-внешние новости."""
@@ -76,7 +89,8 @@ def external_news():
     return jsonify({
         "items": [
             {"id": n.id, "title_ru": n.title_ru, "title_en": n.title_en, "url": f"/news/{n.id}",
-             "image": n.image, "rating": n.avg_rating}
+             "image": url_for("api.news_image", news_id=n.id) if n.image == "db" else url_for("static", filename="img/" + n.image),
+             "rating": n.avg_rating}
             for n in items
         ]
     })
